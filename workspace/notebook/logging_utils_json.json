@@ -1,0 +1,169 @@
+{
+	"name": "logging_utils_json",
+	"properties": {
+		"folder": {
+			"name": "utils"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "2499df63-f6b6-4a55-843b-63e98d680cf4"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from dataclasses import dataclass\r\n",
+					"from dataclasses_json import dataclass_json\r\n",
+					"import time\r\n",
+					"\r\n",
+					"@dataclass_json\r\n",
+					"@dataclass\r\n",
+					"class LogMessage():\r\n",
+					"    message: str\r\n",
+					"    job_name: str\r\n",
+					"    destination_database_name: str = \"\"\r\n",
+					"    destination_table_name: str = \"\"\r\n",
+					"    source_table_name: str =\"\"\r\n",
+					"    duration: str = \"0\"\r\n",
+					"    job_start_time: str = \"\"\r\n",
+					"    job_end_time: str = \"\"\r\n",
+					"\r\n",
+					"base_message = None\r\n",
+					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
+					"logger = spark_log4j.LogManager.getLogger(\"synapse_dataplatform\")"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def start_logging(job_name, destination_database_name, destination_table_name, source_table_name):\r\n",
+					"    job_start_time = time.perf_counter()\r\n",
+					"    \r\n",
+					"    global base_message\r\n",
+					"    base_message = LogMessage(message=\"\", job_name=job_name, destination_database_name=destination_database_name, destination_table_name=destinatoin_table_name)\r\n",
+					"\r\n",
+					"    base_message.message=f\"Starting logger for {job_name}\"\r\n",
+					"    logger.info(base_message.to_json())"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def stop_logging(job_name):\r\n",
+					"    base_message.job_end_time = time.perf_counter()\r\n",
+					"    base_message.duration = base_message.job_end_time - base_message.job_start_time\r\n",
+					"    base_message.message = f\"Stopping logger for {job_name}\"\r\n",
+					"    logger.info(base_message.to_json())"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_informational_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.info(base_message.to_json())"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_warning_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.warn(base_message.to_json())"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_error_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.error(base_message.to_json())"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}
