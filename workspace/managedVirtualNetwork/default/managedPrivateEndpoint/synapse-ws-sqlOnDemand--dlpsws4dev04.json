@@ -1,0 +1,10 @@
+{
+	"name": "synapse-ws-sqlOnDemand--dlpsws4dev04",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev05/providers/Microsoft.Synapse/workspaces/dlpsws4dev04",
+		"groupId": "sqlOnDemand",
+		"fqdns": [
+			"dlpsws4dev04-ondemand.2ab8c5b9-68f1-4162-8b3a-a38df77c71e4.sql.azuresynapse.net"
+		]
+	}
+}
