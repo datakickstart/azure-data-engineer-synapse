@@ -1,0 +1,414 @@
+{
+	"name": "nb_consumerindex_raw",
+	"properties": {
+		"folder": {
+			"name": "best_of_class_recruiting"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "dlpssp4dev04",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "0f3ecc68-31c2-4865-b1d5-780f193a7d98"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev05/providers/Microsoft.Synapse/workspaces/dlpsws4dev04/bigDataPools/dlpssp4dev04",
+				"name": "dlpssp4dev04",
+				"type": "Spark",
+				"endpoint": "https://dlpsws4dev04.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/dlpssp4dev04",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "2.4",
+				"nodeCount": 5,
+				"cores": 8,
+				"memory": 56,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Ingest CU data to raw\r\n",
+					"The latsest consumer price index is provided publicly via the [Bureau of Labor Statistics website](https://www.bls.gov/cpi/data.htm). This script is to download and reload raw tables with the latest files. Currently there is no check on if the data has changed at the source.\r\n",
+					"\r\n",
+					"\r\n",
+					"## Steps\r\n",
+					"1. Create raw_cu database (if does not exist) \r\n",
+					"2. Download all \"enabled\" files from website\r\n",
+					"3. Save as parquet tables in raw \r\n",
+					"4. Log timing for each step"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%%configure -f\r\n",
+					"{\r\n",
+					"    \"driverMemory\": \"28g\",\r\n",
+					"    \"driverCores\": 4,\r\n",
+					"    \"executorMemory\": \"28g\",\r\n",
+					"    \"executorCores\": 4,\r\n",
+					"    \"conf\":\r\n",
+					"    {\r\n",
+					"        \"spark.driver.maxResultSize\": \"10g\",\r\n",
+					"        \"spark.sql.execution.arrow.pyspark.enabled\": \"false\",\r\n",
+					"        \"spark.sql.shuffle.partitions\": 12  \r\n",
+					"    }\r\n",
+					"}"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"keyvault_ls = \"demokv\""
+				],
+				"execution_count": 28
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": []
+				},
+				"source": [
+					"\r\n",
+					"raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
+					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
+					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')"
+				],
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"import pandas as pd\r\n",
+					"import requests\r\n",
+					"import io\r\n",
+					"\r\n",
+					"\r\n",
+					"def create_database(db_name, path, drop=False):\r\n",
+					"    if drop:\r\n",
+					"        spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
+					"    spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}';\")\r\n",
+					"\r\n",
+					"def read_csv_from_web(url):\r\n",
+					"    \"\"\"\r\n",
+					"    Args:\r\n",
+					"        url\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        DataFrame, results of reading data with extra spaces stripped from column headers\r\n",
+					"    \"\"\"\r\n",
+					"    s = requests.get(url).content\r\n",
+					"    c = pd.read_csv(url, delimiter='\\t', na_filter=False)\r\n",
+					"\r\n",
+					"    col_headers = []\r\n",
+					"    for h in c.columns:\r\n",
+					"        col_headers.append(h.strip())\r\n",
+					"\r\n",
+					"    return spark.createDataFrame(c, col_headers)\r\n",
+					"\r\n",
+					"def save_spark_table(df, table, format='parquet'):\r\n",
+					"    #df.write.format('delta').mode('overwrite').save(raw_path)\r\n",
+					"    # spark.sql(f\"DROP TABLE {table};\")\r\n",
+					"    df.write.format(format).mode('overwrite').saveAsTable(table)\r\n",
+					""
+				],
+				"execution_count": 30
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"#raw_path = 'abfss://raw@datakickstartadls.dfs.core.windows.net/cu'\r\n",
+					"raw_path = raw_storage_base_path + 'cu'\r\n",
+					"\r\n",
+					"create_database('raw_cu', raw_path)"
+				],
+				"execution_count": 31
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"file_map = {\r\n",
+					"    'cu.series': 'series',\r\n",
+					"    'cu.data.0.Current': 'current',\r\n",
+					"    'cu.area': 'area',\r\n",
+					"    # 'cu.base': 'base',\r\n",
+					"    # 'cu.item': 'item',\r\n",
+					"    # 'cu.period': 'period',    \r\n",
+					"    # 'cu.periodicity': 'periodicity',\r\n",
+					"    # 'cu.seasonal': 'seasonal',\r\n",
+					"\r\n",
+					"    # 'cu.data.1.AllItems': 'all_items',\r\n",
+					"    # 'cu.data.2.Summaries': 'summaries',\r\n",
+					"    # 'cu.data.3.AsizeNorthEast': 'asize_north_east',\r\n",
+					"    # 'cu.data.4.AsizeNorthCentral': 'asize_north_central',\r\n",
+					"    # 'cu.data.5.AsizeSouth': 'asize_south',\r\n",
+					"    # 'cu.data.6.AsizeWest': 'asize_west',\r\n",
+					"    # 'cu.data.7.OtherNorthEast': 'other_north_east',\r\n",
+					"    # 'cu.data.8.OtherNorthCentral': 'other_north_central',\r\n",
+					"    # 'cu.data.9.OtherSouth': 'other_south',\r\n",
+					"    # 'cu.data.10.OtherWest': 'other_west',\r\n",
+					"    # 'cu.data.11.USFoodBeverage': 'us_food_beverage',\r\n",
+					"    # 'cu.data.12.USHousing': 'us_housing',\r\n",
+					"    # 'cu.data.13.USApparel': 'us_apparel',\r\n",
+					"    # 'cu.data.14.USTransportation': 'us_transportation',\r\n",
+					"    # 'cu.data.15.USMedical': 'us_medical',\r\n",
+					"    # 'cu.data.16.USRecreation': 'us_recreation',\r\n",
+					"    # 'cu.data.17.USEducationAndCommunication': 'us_educational_and_communication',\r\n",
+					"    # 'cu.data.18.USOtherGoodsAndServices': 'us_other_goods_and_services',\r\n",
+					"    # 'cu.data.19.PopulationSize': 'population_size',\r\n",
+					"    # 'cu.data.20.USCommoditiesServicesSpecial': 'us_commodities_services_special'\r\n",
+					"    \r\n",
+					"}"
+				],
+				"execution_count": 36
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# url = 'https://download.bls.gov/pub/time.series/cu/cu.data.0.Current'\r\n",
+					"# destination_table = 'current'\r\n",
+					"\r\n",
+					"# source_df = read_csv_from_web(url)\r\n",
+					"# display(source_df)"
+				],
+				"execution_count": 33
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"for file, destination_table in file_map.items():\r\n",
+					"    url = f'https://download.bls.gov/pub/time.series/cu/{file}'\r\n",
+					"    source_df = read_csv_from_web(url)\r\n",
+					"    \r\n",
+					"    # FOR PROFILING AND EXPLORATION\r\n",
+					"    print(destination_table)\r\n",
+					"    # source_df.show()\r\n",
+					"\r\n",
+					"    save_spark_table(source_df,'raw_cu.'+destination_table)    "
+				],
+				"execution_count": 37
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"CREATE OR REPLACE VIEW raw_cu.vw_current_full\r\n",
+					"AS\r\n",
+					"SELECT\r\n",
+					"    c.year,\r\n",
+					"    c.period,\r\n",
+					"    s.*, \r\n",
+					"    item.item_name,\r\n",
+					"    area.area_name,\r\n",
+					"    c.value\r\n",
+					"FROM `current` c\r\n",
+					"  JOIN series s\r\n",
+					"    ON c.series_id = s.series_id\r\n",
+					"  JOIN item\r\n",
+					"    ON s.item_code = item.item_code\r\n",
+					"  JOIN area\r\n",
+					"    ON s.area_code = area.area_code"
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"SELECT *\r\n",
+					"FROM raw_cu.vw_current_full\r\n",
+					"LIMIT 10"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"DESCRIBE FORMATTED raw_cu.area"
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# from pyspark.sql.functions import input_file_name\r\n",
+					"# current_df = spark.read.format('delta').load(raw_path).withColumn('path', input_file_name())\r\n",
+					"# display(current_df)"
+				],
+				"execution_count": 11
+			}
+		]
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "sql_permissions",
+	"properties": {
+		"content": {
+			"query": "-- This is an example of setting permissions on serverless SQL database\nCREATE DATABASE severless_db\n\nuse master\ngo\n\nCREATE LOGIN [test@trainingdustinvannoy.onmicrosoft.com] FROM EXTERNAL PROVIDER;\ngo\nCREATE LOGIN [synapse_reader] FROM EXTERNAL PROVIDER;\ngo\n\nALTER SERVER ROLE sysadmin ADD MEMBER [synapse_reader];\n--ALTER SERVER ROLE public ADD MEMBER [synapse_reader];\n\nalter role db_datareader add MEMBER [synapse_reader]\nGO\n\nalter role db_datareader add MEMBER [synapse_reader]\nGO\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
