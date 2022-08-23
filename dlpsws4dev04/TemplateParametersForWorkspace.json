@@ -1,0 +1,18 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "dlpsws4dev04"
+		},
+		"dlpsws4dev04-WorkspaceDefaultSqlServer_connectionString": {
+			"value": ""
+		},
+		"dlpkvs_ls_properties_typeProperties_baseUrl": {
+			"value": "https://dlpkvs4dev03.vault.azure.net/"
+		},
+		"dlpsws4dev04-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://dlpssa4dev04.dfs.core.windows.net/"
+		}
+	}
+}
