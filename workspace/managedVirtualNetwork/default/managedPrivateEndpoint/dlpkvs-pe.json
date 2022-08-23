@@ -1,0 +1,7 @@
+{
+	"name": "dlpkvs-pe",
+	"properties": {
+		"privateLinkResourceId": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev01/providers/Microsoft.KeyVault/vaults/dlpkvs4dev03",
+		"groupId": "vault"
+	}
+}
