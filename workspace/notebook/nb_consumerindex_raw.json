@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "0f3ecc68-31c2-4865-b1d5-780f193a7d98"
+				"spark.autotune.trackingId": "6796e418-a844-4e00-84a4-d8d20cbf5ad7"
 			}
 		},
 		"metadata": {
@@ -44,11 +44,11 @@
 				},
 				"sparkVersion": "2.4",
 				"nodeCount": 5,
-				"cores": 8,
-				"memory": 56,
+				"cores": 4,
+				"memory": 28,
 				"automaticScaleJobs": false
 			},
-			"sessionKeepAliveTimeout": 30
+			"sessionKeepAliveTimeout": 15
 		},
 		"cells": [
 			{
@@ -96,11 +96,11 @@
 					"    {\r\n",
 					"        \"spark.driver.maxResultSize\": \"10g\",\r\n",
 					"        \"spark.sql.execution.arrow.pyspark.enabled\": \"false\",\r\n",
-					"        \"spark.sql.shuffle.partitions\": 12  \r\n",
+					"        \"spark.sql.shuffle.partitions\": 24  \r\n",
 					"    }\r\n",
 					"}"
 				],
-				"execution_count": 27
+				"execution_count": 19
 			},
 			{
 				"cell_type": "code",
@@ -119,9 +119,9 @@
 					]
 				},
 				"source": [
-					"keyvault_ls = \"demokv\""
+					"keyvault_ls = \"dlpkvs_ls\""
 				],
-				"execution_count": 28
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -143,7 +143,7 @@
 					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
 					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')"
 				],
-				"execution_count": 29
+				"execution_count": 21
 			},
 			{
 				"cell_type": "code",
@@ -158,10 +158,12 @@
 					"        spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
 					"    spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}';\")\r\n",
 					"\r\n",
+					"\r\n",
 					"def read_csv_from_web(url):\r\n",
-					"    \"\"\"\r\n",
+					"    \"\"\"Read delimited data from web, for example url = https://download.bls.gov/pub/time.series/cu/cu.area\r\n",
+					"    \r\n",
 					"    Args:\r\n",
-					"        url\r\n",
+					"        url: URL to raw file\r\n",
 					"\r\n",
 					"    Returns:\r\n",
 					"        DataFrame, results of reading data with extra spaces stripped from column headers\r\n",
@@ -175,13 +177,44 @@
 					"\r\n",
 					"    return spark.createDataFrame(c, col_headers)\r\n",
 					"\r\n",
-					"def save_spark_table(df, table, format='parquet'):\r\n",
-					"    #df.write.format('delta').mode('overwrite').save(raw_path)\r\n",
-					"    # spark.sql(f\"DROP TABLE {table};\")\r\n",
-					"    df.write.format(format).mode('overwrite').saveAsTable(table)\r\n",
-					""
+					"\r\n",
+					"def get_table_paths(base_path):\r\n",
+					"    \"\"\"Return list of items for file path and folder/table.\r\n",
+					"\r\n",
+					"    Args:\r\n",
+					"        base_path (str): Azure path to get data directories (must be authenticated), \r\n",
+					"            formatted abfss://<container>@<storage_account>.dfs.core.windows.net/[root_directory]\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        list[(path, table_name)]: List of tuples, each item has full path in ADLS and the folder name (usually used as table name)\r\n",
+					"    \r\n",
+					"    \"\"\"\r\n",
+					"    table_paths = mssparkutils.fs.ls(base_path)\r\n",
+					"    return [(file_info.path, file_info.name) for file_info in table_paths]\r\n",
+					"\r\n",
+					"\r\n",
+					"def save_table(df, table, partition_str=None, format=\"delta\", mode='overwrite'):\r\n",
+					"    \"\"\"Save Spark table using format provided (parquet or delta).\r\n",
+					"    \r\n",
+					"    Args:\r\n",
+					"        df (DataFrame): Data to save as Spark table.\r\n",
+					"        table (str): Name of destination table\r\n",
+					"        partition_str (str, optional): Column names used to partition folders as comma delimited string, for example 'colA,colB'. No partitions created if not provided.\r\n",
+					"        format (str, optional): Defaults to 'delta'\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        None\r\n",
+					"\r\n",
+					"    \"\"\"\r\n",
+					"    options = {\r\n",
+					"        \"mergeSchema\": \"true\"\r\n",
+					"    }\r\n",
+					"    writer = df.write.mode(\"overwrite\").options(**options).format(format)\r\n",
+					"    if partition_str:\r\n",
+					"        writer = writer.partitionBy(partition_str)\r\n",
+					"    writer.saveAsTable(table)"
 				],
-				"execution_count": 30
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -197,12 +230,11 @@
 					}
 				},
 				"source": [
-					"#raw_path = 'abfss://raw@datakickstartadls.dfs.core.windows.net/cu'\r\n",
 					"raw_path = raw_storage_base_path + 'cu'\r\n",
 					"\r\n",
 					"create_database('raw_cu', raw_path)"
 				],
-				"execution_count": 31
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -222,11 +254,11 @@
 					"    'cu.series': 'series',\r\n",
 					"    'cu.data.0.Current': 'current',\r\n",
 					"    'cu.area': 'area',\r\n",
-					"    # 'cu.base': 'base',\r\n",
-					"    # 'cu.item': 'item',\r\n",
-					"    # 'cu.period': 'period',    \r\n",
-					"    # 'cu.periodicity': 'periodicity',\r\n",
-					"    # 'cu.seasonal': 'seasonal',\r\n",
+					"    'cu.base': 'base',\r\n",
+					"    'cu.item': 'item',\r\n",
+					"    'cu.period': 'period',    \r\n",
+					"    'cu.periodicity': 'periodicity',\r\n",
+					"    'cu.seasonal': 'seasonal',\r\n",
 					"\r\n",
 					"    # 'cu.data.1.AllItems': 'all_items',\r\n",
 					"    # 'cu.data.2.Summaries': 'summaries',\r\n",
@@ -251,7 +283,7 @@
 					"    \r\n",
 					"}"
 				],
-				"execution_count": 36
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -274,7 +306,7 @@
 					"# source_df = read_csv_from_web(url)\r\n",
 					"# display(source_df)"
 				],
-				"execution_count": 33
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -300,7 +332,7 @@
 					"\r\n",
 					"    save_spark_table(source_df,'raw_cu.'+destination_table)    "
 				],
-				"execution_count": 37
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -338,7 +370,7 @@
 					"  JOIN area\r\n",
 					"    ON s.area_code = area.area_code"
 				],
-				"execution_count": 22
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -363,30 +395,7 @@
 					"FROM raw_cu.vw_current_full\r\n",
 					"LIMIT 10"
 				],
-				"execution_count": 23
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					},
-					"microsoft": {
-						"language": "sparksql"
-					},
-					"collapsed": false
-				},
-				"source": [
-					"%%sql\r\n",
-					"DESCRIBE FORMATTED raw_cu.area"
-				],
-				"execution_count": 24
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",

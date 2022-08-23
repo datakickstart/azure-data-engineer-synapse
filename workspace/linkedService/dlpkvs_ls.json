@@ -1,0 +1,10 @@
+{
+	"name": "dlpkvs_ls",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://dlpkvs4dev03.vault.azure.net/"
+		}
+	}
+}
