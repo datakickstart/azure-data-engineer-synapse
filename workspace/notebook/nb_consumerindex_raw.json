@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "dlpssp4dev04",
+			"referenceName": "dlpssp01",
 			"type": "BigDataPoolReference"
 		},
 		"sessionProperties": {
@@ -16,11 +16,12 @@
 			"executorMemory": "28g",
 			"executorCores": 4,
 			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": true,
 			"conf": {
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "a6862efe-944e-4cc9-84fa-cd19ab142f0f"
+				"spark.autotune.trackingId": "4e5d95c5-6b1d-4a27-bac9-4b86241876ce"
 			}
 		},
 		"metadata": {
@@ -34,16 +35,16 @@
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev05/providers/Microsoft.Synapse/workspaces/dlpsws4dev04/bigDataPools/dlpssp4dev04",
-				"name": "dlpssp4dev04",
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev05/providers/Microsoft.Synapse/workspaces/dlpsws4dev04/bigDataPools/dlpssp01",
+				"name": "dlpssp01",
 				"type": "Spark",
-				"endpoint": "https://dlpsws4dev04.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/dlpssp4dev04",
+				"endpoint": "https://dlpsws4dev04.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/dlpssp01",
 				"auth": {
 					"type": "AAD",
 					"authResource": "https://dev.azuresynapse.net"
 				},
-				"sparkVersion": "2.4",
-				"nodeCount": 5,
+				"sparkVersion": "3.2",
+				"nodeCount": 10,
 				"cores": 4,
 				"memory": 28,
 				"automaticScaleJobs": false
@@ -100,7 +101,7 @@
 					"    }\r\n",
 					"}"
 				],
-				"execution_count": 1
+				"execution_count": 7
 			},
 			{
 				"cell_type": "code",
@@ -121,7 +122,7 @@
 				"source": [
 					"keyvault_ls = \"dlpkvs_ls\""
 				],
-				"execution_count": 2
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
@@ -143,7 +144,7 @@
 					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
 					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')"
 				],
-				"execution_count": 3
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
@@ -193,7 +194,7 @@
 					"    return [(file_info.path, file_info.name) for file_info in table_paths]\r\n",
 					"\r\n",
 					"\r\n",
-					"def save_table(df, table, partition_str=None, format=\"delta\", mode='overwrite'):\r\n",
+					"def save_spark_table(df, table, partition_str=None, format=\"delta\", mode='overwrite'):\r\n",
 					"    \"\"\"Save Spark table using format provided (parquet or delta).\r\n",
 					"    \r\n",
 					"    Args:\r\n",
@@ -214,7 +215,7 @@
 					"        writer = writer.partitionBy(partition_str)\r\n",
 					"    writer.saveAsTable(table)"
 				],
-				"execution_count": 6
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
@@ -234,7 +235,7 @@
 					"print(raw_path)\r\n",
 					"create_database('raw_cu', raw_path)"
 				],
-				"execution_count": 8
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -283,7 +284,7 @@
 					"    \r\n",
 					"}"
 				],
-				"execution_count": null
+				"execution_count": 12
 			},
 			{
 				"cell_type": "code",
@@ -306,7 +307,7 @@
 					"# source_df = read_csv_from_web(url)\r\n",
 					"# display(source_df)"
 				],
-				"execution_count": null
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
@@ -332,7 +333,7 @@
 					"\r\n",
 					"    save_spark_table(source_df,'raw_cu.'+destination_table)    "
 				],
-				"execution_count": null
+				"execution_count": 16
 			},
 			{
 				"cell_type": "code",
@@ -370,7 +371,7 @@
 					"  JOIN area\r\n",
 					"    ON s.area_code = area.area_code"
 				],
-				"execution_count": null
+				"execution_count": 17
 			},
 			{
 				"cell_type": "code",
