@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "4e5d95c5-6b1d-4a27-bac9-4b86241876ce"
+				"spark.autotune.trackingId": "ffc20840-7801-48f5-8083-95c3089a48ab"
 			}
 		},
 		"metadata": {
@@ -363,15 +363,15 @@
 					"    item.item_name,\r\n",
 					"    area.area_name,\r\n",
 					"    c.value\r\n",
-					"FROM `current` c\r\n",
-					"  JOIN series s\r\n",
+					"FROM raw_cu.`current` c\r\n",
+					"  JOIN raw_cu.series s\r\n",
 					"    ON c.series_id = s.series_id\r\n",
-					"  JOIN item\r\n",
+					"  JOIN raw_cu.item\r\n",
 					"    ON s.item_code = item.item_code\r\n",
-					"  JOIN area\r\n",
+					"  JOIN raw_cu.area\r\n",
 					"    ON s.area_code = area.area_code"
 				],
-				"execution_count": 17
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -396,7 +396,7 @@
 					"FROM raw_cu.vw_current_full\r\n",
 					"LIMIT 10"
 				],
-				"execution_count": null
+				"execution_count": 21
 			},
 			{
 				"cell_type": "code",
