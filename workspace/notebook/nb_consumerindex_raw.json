@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "697e93b4-e93a-46da-804f-13ce43b7893a"
+				"spark.autotune.trackingId": "1aa72092-0a65-41d1-ac38-807c403cd2a2"
 			}
 		},
 		"metadata": {
@@ -101,7 +101,7 @@
 					"    }\r\n",
 					"}"
 				],
-				"execution_count": 32
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
@@ -122,7 +122,7 @@
 				"source": [
 					"keyvault_ls = \"dlpkvs_ls\""
 				],
-				"execution_count": null
+				"execution_count": 14
 			},
 			{
 				"cell_type": "code",
@@ -142,13 +142,16 @@
 					"\r\n",
 					"raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
 					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
-					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')"
+					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')\r\n",
+					"\r\n",
+					"raw_format = \"parquet\""
 				],
-				"execution_count": null
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
 				"source": [
+					"from pyspark.sql.types import StructType\r\n",
 					"import pandas as pd\r\n",
 					"import requests\r\n",
 					"import io\r\n",
@@ -215,7 +218,7 @@
 					"        writer = writer.partitionBy(partition_str)\r\n",
 					"    writer.saveAsTable(table)"
 				],
-				"execution_count": null
+				"execution_count": 16
 			},
 			{
 				"cell_type": "code",
@@ -235,7 +238,7 @@
 					"print(raw_path)\r\n",
 					"create_database('raw_cu', raw_path, drop=True)"
 				],
-				"execution_count": null
+				"execution_count": 17
 			},
 			{
 				"cell_type": "code",
@@ -252,14 +255,14 @@
 				},
 				"source": [
 					"file_map = {\r\n",
-					"    'cu.series': 'series',\r\n",
-					"    'cu.data.0.Current': 'current',\r\n",
+					"    # 'cu.series': 'series',\r\n",
+					"    # 'cu.data.0.Current': 'current',\r\n",
 					"    'cu.area': 'area',\r\n",
-					"    'cu.base': 'base',\r\n",
-					"    'cu.item': 'item',\r\n",
-					"    'cu.period': 'period',    \r\n",
-					"    'cu.periodicity': 'periodicity',\r\n",
-					"    'cu.seasonal': 'seasonal',\r\n",
+					"    # 'cu.base': 'base',\r\n",
+					"    # 'cu.item': 'item',\r\n",
+					"    # 'cu.period': 'period',    \r\n",
+					"    # 'cu.periodicity': 'periodicity',\r\n",
+					"    # 'cu.seasonal': 'seasonal',\r\n",
 					"\r\n",
 					"    # 'cu.data.1.AllItems': 'all_items',\r\n",
 					"    # 'cu.data.2.Summaries': 'summaries',\r\n",
@@ -284,7 +287,7 @@
 					"    \r\n",
 					"}"
 				],
-				"execution_count": null
+				"execution_count": 18
 			},
 			{
 				"cell_type": "code",
@@ -307,7 +310,7 @@
 					"# source_df = read_csv_from_web(url)\r\n",
 					"# display(source_df)"
 				],
-				"execution_count": null
+				"execution_count": 19
 			},
 			{
 				"cell_type": "code",
@@ -331,9 +334,9 @@
 					"    print(destination_table)\r\n",
 					"    # source_df.show()\r\n",
 					"\r\n",
-					"    save_spark_table(source_df,'raw_cu.'+destination_table, format=\"parquet\")    "
+					"    save_spark_table(source_df,'raw_cu.'+destination_table, format=raw_format)    "
 				],
-				"execution_count": null
+				"execution_count": 20
 			},
 			{
 				"cell_type": "code",
@@ -371,7 +374,7 @@
 					"  JOIN raw_cu.area\r\n",
 					"    ON s.area_code = area.area_code"
 				],
-				"execution_count": null
+				"execution_count": 21
 			},
 			{
 				"cell_type": "code",
