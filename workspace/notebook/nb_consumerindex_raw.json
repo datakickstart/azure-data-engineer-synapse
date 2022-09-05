@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "1aa72092-0a65-41d1-ac38-807c403cd2a2"
+				"spark.autotune.trackingId": "3c9bef8f-3c1b-40ef-aae8-e3ff58228af2"
 			}
 		},
 		"metadata": {
@@ -255,14 +255,14 @@
 				},
 				"source": [
 					"file_map = {\r\n",
-					"    # 'cu.series': 'series',\r\n",
-					"    # 'cu.data.0.Current': 'current',\r\n",
+					"    'cu.series': 'series',\r\n",
+					"    'cu.data.0.Current': 'current',\r\n",
 					"    'cu.area': 'area',\r\n",
-					"    # 'cu.base': 'base',\r\n",
-					"    # 'cu.item': 'item',\r\n",
-					"    # 'cu.period': 'period',    \r\n",
-					"    # 'cu.periodicity': 'periodicity',\r\n",
-					"    # 'cu.seasonal': 'seasonal',\r\n",
+					"    'cu.base': 'base',\r\n",
+					"    'cu.item': 'item',\r\n",
+					"    'cu.period': 'period',    \r\n",
+					"    'cu.periodicity': 'periodicity',\r\n",
+					"    'cu.seasonal': 'seasonal',\r\n",
 					"\r\n",
 					"    # 'cu.data.1.AllItems': 'all_items',\r\n",
 					"    # 'cu.data.2.Summaries': 'summaries',\r\n",
