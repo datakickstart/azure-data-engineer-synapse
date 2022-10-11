@@ -1,0 +1,23 @@
+{
+	"name": "cu_source_ls",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobStorage",
+		"typeProperties": {
+			"sasUri": "https://dlpasa4dev03.blob.core.windows.net/cu-source",
+			"sasToken": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "dlpkvs_ls",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "cu-source-sas"
+			}
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
