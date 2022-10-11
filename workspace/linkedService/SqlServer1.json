@@ -1,0 +1,17 @@
+{
+	"name": "SqlServer1",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "SqlServer",
+		"typeProperties": {
+			"connectionString": "integrated security=True;data source=20.114.129.103;initial catalog=BLS",
+			"userName": "adm4vm",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJiNjg2ZDkxMi1lNThiLTRhZTYtODQ4MS1hNzVjNWVjODBlYWQiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "IntegrationRuntime1",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}
