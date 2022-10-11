@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "ecd2a2ef-cf62-4e2e-9728-c97776746687"
+				"spark.autotune.trackingId": "dc82598d-7d6f-4f69-b754-653e49d5baa9"
 			}
 		},
 		"metadata": {
@@ -140,14 +140,14 @@
 				},
 				"source": [
 					"\r\n",
-					"raw_storage_base_path = source_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'cu-source-path')\r\n",
+					"raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'cu-source-path')\r\n",
 					" # mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
 					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
 					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')\r\n",
 					"\r\n",
 					"raw_format = \"parquet\""
 				],
-				"execution_count": 8
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
@@ -239,7 +239,7 @@
 					"print(raw_path)\r\n",
 					"create_database('source_cu', raw_path, drop=True)"
 				],
-				"execution_count": 10
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
