@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "00335ee4-b3e0-4c9a-96d9-ff3944ea83ac"
+				"spark.autotune.trackingId": "ecd2a2ef-cf62-4e2e-9728-c97776746687"
 			}
 		},
 		"metadata": {
@@ -101,7 +101,7 @@
 					"    }\r\n",
 					"}"
 				],
-				"execution_count": 22
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -122,7 +122,7 @@
 				"source": [
 					"keyvault_ls = \"dlpkvs_ls\""
 				],
-				"execution_count": 23
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -140,13 +140,14 @@
 				},
 				"source": [
 					"\r\n",
-					"raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
+					"raw_storage_base_path = source_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'cu-source-path')\r\n",
+					" # mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
 					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
 					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')\r\n",
 					"\r\n",
 					"raw_format = \"parquet\""
 				],
-				"execution_count": 24
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
@@ -197,7 +198,7 @@
 					"    return [(file_info.path, file_info.name) for file_info in table_paths]\r\n",
 					"\r\n",
 					"\r\n",
-					"def save_spark_table(df, table, partition_str=None, format=\"delta\", mode='overwrite'):\r\n",
+					"def save_spark_table(df, table, partition_str=None, format=\"parquet\", mode='overwrite'):\r\n",
 					"    \"\"\"Save Spark table using format provided (parquet or delta).\r\n",
 					"    \r\n",
 					"    Args:\r\n",
@@ -218,7 +219,7 @@
 					"        writer = writer.partitionBy(partition_str)\r\n",
 					"    writer.saveAsTable(table)"
 				],
-				"execution_count": 25
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
@@ -236,9 +237,9 @@
 				"source": [
 					"raw_path = raw_storage_base_path + 'cu'\r\n",
 					"print(raw_path)\r\n",
-					"create_database('raw_cu', raw_path, drop=True)"
+					"create_database('source_cu', raw_path, drop=True)"
 				],
-				"execution_count": 26
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -287,7 +288,7 @@
 					"    \r\n",
 					"}"
 				],
-				"execution_count": 27
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -310,7 +311,7 @@
 					"# source_df = read_csv_from_web(url)\r\n",
 					"# display(source_df)"
 				],
-				"execution_count": 28
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -334,9 +335,9 @@
 					"    print(destination_table)\r\n",
 					"    # source_df.show()\r\n",
 					"\r\n",
-					"    save_spark_table(source_df,'raw_cu.'+destination_table, format=raw_format)    "
+					"    save_spark_table(source_df, db_name+'.'+destination_table, format=raw_format)    "
 				],
-				"execution_count": 29
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -374,7 +375,7 @@
 					"  JOIN raw_cu.area\r\n",
 					"    ON s.area_code = area.area_code"
 				],
-				"execution_count": 30
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -399,7 +400,7 @@
 					"FROM raw_cu.vw_current_full\r\n",
 					"LIMIT 10"
 				],
-				"execution_count": 31
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -420,7 +421,7 @@
 					"# current_df = spark.read.format('delta').load(raw_path).withColumn('path', input_file_name())\r\n",
 					"# display(current_df)"
 				],
-				"execution_count": 32
+				"execution_count": null
 			}
 		]
 	}
