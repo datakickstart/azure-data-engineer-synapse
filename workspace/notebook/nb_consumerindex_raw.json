@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "665cbda9-dec8-4e8d-a39f-68b3305b3584"
+				"spark.autotune.trackingId": "cd5f4654-fa2e-43d9-9fac-26ed631cd6d3"
 			}
 		},
 		"metadata": {
@@ -164,7 +164,7 @@
 					"\r\n",
 					"raw_format = \"parquet\""
 				],
-				"execution_count": 4
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -186,7 +186,7 @@
 					"source_table_name = \"consumerindex_parquet_files\"\r\n",
 					"start_logging(job_name, destination_database_name, destination_table_name, source_table_name)"
 				],
-				"execution_count": 5
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -231,7 +231,7 @@
 					"        df.write.mode(\"overwrite\").format(format).saveAsTable(table)\r\n",
 					"    log_informational_message(f\"Saved raw table {table}\")"
 				],
-				"execution_count": 7
+				"execution_count": 12
 			},
 			{
 				"cell_type": "code",
@@ -257,7 +257,7 @@
 					"\r\n",
 					"print(table_list)"
 				],
-				"execution_count": 9
+				"execution_count": 13
 			},
 			{
 				"cell_type": "code",
@@ -273,7 +273,7 @@
 					}
 				},
 				"source": [
-					"for path, destination_table in get_table_paths(:\r\n",
+					"for path, destination_table in table_list:\r\n",
 					"    source_df = spark.read.parquet(path)\r\n",
 					"   \r\n",
 					"    # FOR PROFILING AND EXPLORATION\r\n",
@@ -282,7 +282,7 @@
 					"\r\n",
 					"    save_spark_table(source_df, raw_db+'.'+destination_table, format=raw_format)    "
 				],
-				"execution_count": null
+				"execution_count": 15
 			},
 			{
 				"cell_type": "code",
@@ -300,7 +300,7 @@
 				"source": [
 					"stop_logging(job_name)"
 				],
-				"execution_count": null
+				"execution_count": 16
 			}
 		]
 	}
