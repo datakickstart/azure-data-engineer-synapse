@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "fbefdae9-65e9-402e-8893-874105d8180c"
+				"spark.autotune.trackingId": "a4ce961e-6c45-4104-bc2b-1d78859bd1c6"
 			}
 		},
 		"metadata": {
@@ -252,7 +252,8 @@
 					"    if partition_str:\r\n",
 					"        df.write.mode(\"overwrite\").format(format).partitionBy(partition_str).saveAsTable(table)\r\n",
 					"    else:\r\n",
-					"        df.write.mode(\"overwrite\").format(format).saveAsTable(table)"
+					"        df.write.mode(\"overwrite\").format(format).saveAsTable(table)\r\n",
+					"    log_informational_message(f\"Saved raw table {table}\")"
 				],
 				"execution_count": 25
 			},
@@ -305,6 +306,24 @@
 					"    save_spark_table(source_df,'raw_cu.'+destination_table, format=raw_format)    "
 				],
 				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": null
 			}
 		]
 	}
