@@ -5,9 +5,9 @@
 		"annotations": [],
 		"type": "SqlServer",
 		"typeProperties": {
-			"connectionString": "integrated security=True;data source=20.114.129.103;initial catalog=BLS",
+			"connectionString": "integrated security=True;data source=20.230.121.142;initial catalog=BLS",
 			"userName": "adm4vm",
-			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJhYzE2OWIzOS1kODMxLTRkZGMtODJjZC05YTQyMDYyNGU1NWYiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiIxMWRjYjNlNS1jZDY4LTQ1NDQtYmE4Ni01NzE3NDcyZTAyM2UiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
 		},
 		"connectVia": {
 			"referenceName": "IntegrationRuntime1",
