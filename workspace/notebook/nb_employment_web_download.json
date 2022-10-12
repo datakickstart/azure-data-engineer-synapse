@@ -1,0 +1,370 @@
+{
+	"name": "nb_employment_web_download",
+	"properties": {
+		"folder": {
+			"name": "best_of_class_recruiting"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "dlpssp01",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": true,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "5d70072b-f216-4be0-a59c-d58c63652464"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/dlparg4dev05/providers/Microsoft.Synapse/workspaces/dlpsws4dev04/bigDataPools/dlpssp01",
+				"name": "dlpssp01",
+				"type": "Spark",
+				"endpoint": "https://dlpsws4dev04.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/dlpssp01",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 15
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Ingest Employment (OE) data to raw\r\n",
+					"\r\n",
+					"## Steps\r\n",
+					"1. Create raw_oe database (if does not exist) \r\n",
+					"2. Download all \"enabled\" files from website\r\n",
+					"3. Save as parquet tables in raw \r\n",
+					"4. Log timing for each step"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%%configure -f\r\n",
+					"{\r\n",
+					"    \"driverMemory\": \"28g\",\r\n",
+					"    \"driverCores\": 4,\r\n",
+					"    \"executorMemory\": \"28g\",\r\n",
+					"    \"executorCores\": 4,\r\n",
+					"    \"conf\":\r\n",
+					"    {\r\n",
+					"        \"spark.driver.maxResultSize\": \"10g\",\r\n",
+					"        \"spark.sql.execution.arrow.pyspark.enabled\": \"false\",\r\n",
+					"        \"spark.sql.shuffle.partitions\": 24  \r\n",
+					"    }\r\n",
+					"}"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"keyvault_ls = \"dlpkvs_ls\""
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": []
+				},
+				"source": [
+					"\r\n",
+					"# raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'cu-source-path')\r\n",
+					"raw_storage_base_path = mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'raw-datalake-path')\r\n",
+					"refined_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'refined-datalake-path')\r\n",
+					"curated_storage_base_path =  mssparkutils.credentials.getSecretWithLS(keyvault_ls, 'curated-datalake-path')\r\n",
+					"\r\n",
+					"raw_format = \"parquet\"\r\n",
+					"file_group = 'oe'"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.types import StructType\r\n",
+					"import pandas as pd\r\n",
+					"import requests\r\n",
+					"import io\r\n",
+					"\r\n",
+					"\r\n",
+					"def create_database(db_name, path, drop=False):\r\n",
+					"    if drop:\r\n",
+					"        spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
+					"    spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}'\")\r\n",
+					"\r\n",
+					"\r\n",
+					"def read_csv_from_web(url):\r\n",
+					"    \"\"\"Read delimited data from web, for example url = https://download.bls.gov/pub/time.series/cu/cu.area\r\n",
+					"    \r\n",
+					"    Args:\r\n",
+					"        url: URL to raw file\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        DataFrame, results of reading data with extra spaces stripped from column headers\r\n",
+					"    \"\"\"\r\n",
+					"    s = requests.get(url).content\r\n",
+					"    c = pd.read_csv(url, delimiter='\\t', na_filter=False)\r\n",
+					"\r\n",
+					"    col_headers = []\r\n",
+					"    for h in c.columns:\r\n",
+					"        col_headers.append(h.strip())\r\n",
+					"\r\n",
+					"    return spark.createDataFrame(c, col_headers)\r\n",
+					"\r\n",
+					"\r\n",
+					"def get_table_paths(base_path):\r\n",
+					"    \"\"\"Return list of items for file path and folder/table.\r\n",
+					"\r\n",
+					"    Args:\r\n",
+					"        base_path (str): Azure path to get data directories (must be authenticated), \r\n",
+					"            formatted abfss://<container>@<storage_account>.dfs.core.windows.net/[root_directory]\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        list[(path, table_name)]: List of tuples, each item has full path in ADLS and the folder name (usually used as table name)\r\n",
+					"    \r\n",
+					"    \"\"\"\r\n",
+					"    table_paths = mssparkutils.fs.ls(base_path)\r\n",
+					"    return [(file_info.path, file_info.name) for file_info in table_paths]\r\n",
+					"\r\n",
+					"\r\n",
+					"def save_spark_table(df, table, partition_str=None, format=\"parquet\", mode='overwrite'):\r\n",
+					"    \"\"\"Save Spark table using format provided (parquet or delta).\r\n",
+					"    \r\n",
+					"    Args:\r\n",
+					"        df (DataFrame): Data to save as Spark table.\r\n",
+					"        table (str): Name of destination table\r\n",
+					"        partition_str (str, optional): Column names used to partition folders as comma delimited string, for example 'colA,colB'. No partitions created if not provided.\r\n",
+					"        format (str, optional): Defaults to 'delta'\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        None\r\n",
+					"\r\n",
+					"    \"\"\"\r\n",
+					"    options = {\r\n",
+					"        \"mergeSchema\": \"true\"\r\n",
+					"    }\r\n",
+					"    writer = df.write.mode(\"overwrite\").options(**options).format(format)\r\n",
+					"    if partition_str:\r\n",
+					"        writer = writer.partitionBy(partition_str)\r\n",
+					"    writer.saveAsTable(table)"
+				],
+				"execution_count": 15
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"raw_path = raw_storage_base_path + f'{file_group}_parquet'\r\n",
+					"db_name = f'raw_{file_group}'\r\n",
+					"\r\n",
+					"print(raw_path)\r\n",
+					"create_database(db_name, raw_path, drop=True)"
+				],
+				"execution_count": 16
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\r\n",
+					"file_map = {\r\n",
+					"    'oe.series': 'employment_series',\r\n",
+					"    # 'cu.series': 'series',\r\n",
+					"    # 'cu.data.0.Current': 'current',\r\n",
+					"    # 'cu.area': 'area',\r\n",
+					"    # 'cu.base': 'base',\r\n",
+					"    # 'cu.item': 'item',\r\n",
+					"    # 'cu.period': 'period',    \r\n",
+					"    # 'cu.periodicity': 'periodicity',\r\n",
+					"    # 'cu.seasonal': 'seasonal',\r\n",
+					"\r\n",
+					"    # 'cu.data.1.AllItems': 'all_items',\r\n",
+					"    # 'cu.data.2.Summaries': 'summaries',\r\n",
+					"    # # 'cu.data.3.AsizeNorthEast': 'asize_north_east',\r\n",
+					"    # # 'cu.data.4.AsizeNorthCentral': 'asize_north_central',\r\n",
+					"    # # 'cu.data.5.AsizeSouth': 'asize_south',\r\n",
+					"    # # 'cu.data.6.AsizeWest': 'asize_west',\r\n",
+					"    # # 'cu.data.7.OtherNorthEast': 'other_north_east',\r\n",
+					"    # # 'cu.data.8.OtherNorthCentral': 'other_north_central',\r\n",
+					"    # # 'cu.data.9.OtherSouth': 'other_south',\r\n",
+					"    # # 'cu.data.10.OtherWest': 'other_west',\r\n",
+					"    # # 'cu.data.11.USFoodBeverage': 'us_food_beverage',\r\n",
+					"    # 'cu.data.12.USHousing': 'us_housing',\r\n",
+					"    # # 'cu.data.13.USApparel': 'us_apparel',\r\n",
+					"    # # 'cu.data.14.USTransportation': 'us_transportation',\r\n",
+					"    # # 'cu.data.15.USMedical': 'us_medical',\r\n",
+					"    # # 'cu.data.16.USRecreation': 'us_recreation',\r\n",
+					"    # # 'cu.data.17.USEducationAndCommunication': 'us_educational_and_communication',\r\n",
+					"    # # 'cu.data.18.USOtherGoodsAndServices': 'us_other_goods_and_services',\r\n",
+					"    # 'cu.data.19.PopulationSize': 'population_size',\r\n",
+					"    # # 'cu.data.20.USCommoditiesServicesSpecial': 'us_commodities_services_special'\r\n",
+					"    \r\n",
+					"}"
+				],
+				"execution_count": 17
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# url = 'https://download.bls.gov/pub/time.series/cu/cu.data.0.Current'\r\n",
+					"# destination_table = 'current'\r\n",
+					"\r\n",
+					"# source_df = read_csv_from_web(url)\r\n",
+					"# display(source_df)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"for file, destination_table in file_map.items():\r\n",
+					"    url = f'https://download.bls.gov/pub/time.series/{file_group}/{file}'\r\n",
+					"    # print(url)\r\n",
+					"    source_df = read_csv_from_web(url)\r\n",
+					"    \r\n",
+					"    # FOR PROFILING AND EXPLORATION\r\n",
+					"    print(destination_table)\r\n",
+					"    # source_df.show()\r\n",
+					"\r\n",
+					"    # print(db_name)\r\n",
+					"    save_spark_table(source_df, db_name+'.'+destination_table, format=raw_format)    "
+				],
+				"execution_count": 19
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# from pyspark.sql.functions import input_file_name\r\n",
+					"# current_df = spark.read.format('delta').load(raw_path).withColumn('path', input_file_name())\r\n",
+					"# display(current_df)"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}
