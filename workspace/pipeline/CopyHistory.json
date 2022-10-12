@@ -1,0 +1,155 @@
+{
+	"name": "CopyHistory",
+	"properties": {
+		"activities": [
+			{
+				"name": "ForEach_uk5",
+				"type": "ForEach",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@pipeline().parameters.cw_items",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Copy_uk5",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [
+								{
+									"name": "Source",
+									"value": "RawData.@{item().source.table}"
+								},
+								{
+									"name": "Destination",
+									"value": "raw/cu_history/@{item().destination.fileName}"
+								}
+							],
+							"typeProperties": {
+								"source": {
+									"type": "SqlServerSource",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings",
+										"blockSizeInMB": 100
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".txt"
+									}
+								},
+								"enableStaging": false,
+								"parallelCopies": 4,
+								"validateDataConsistency": false,
+								"dataIntegrationUnits": 16
+							},
+							"inputs": [
+								{
+									"referenceName": "SourceDataset_uk5",
+									"type": "DatasetReference",
+									"parameters": {
+										"cw_table": "@item().source.table"
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DestinationDataset_uk5",
+									"type": "DatasetReference",
+									"parameters": {
+										"cw_fileName": "@item().destination.fileName"
+									}
+								}
+							]
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"cw_items": {
+				"type": "Array",
+				"defaultValue": [
+					{
+						"source": {
+							"table": "CUArea"
+						},
+						"destination": {
+							"fileName": "RawDataCUArea.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUBase"
+						},
+						"destination": {
+							"fileName": "RawDataCUBase.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUData"
+						},
+						"destination": {
+							"fileName": "RawDataCUData.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUItem"
+						},
+						"destination": {
+							"fileName": "RawDataCUItem.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUPeriod"
+						},
+						"destination": {
+							"fileName": "RawDataCUPeriod.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUPeriodicity"
+						},
+						"destination": {
+							"fileName": "RawDataCUPeriodicity.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUSeasonal"
+						},
+						"destination": {
+							"fileName": "RawDataCUSeasonal.txt"
+						}
+					},
+					{
+						"source": {
+							"table": "CUSeries"
+						},
+						"destination": {
+							"fileName": "RawDataCUSeries.txt"
+						}
+					}
+				]
+			}
+		},
+		"annotations": []
+	}
+}
