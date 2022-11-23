@@ -1,0 +1,139 @@
+{
+	"name": "eventhubs_spark_scala",
+	"properties": {
+		"folder": {
+			"name": "Streaming"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "tobogganCustom",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "a88408f1-76c1-4378-8df7-8755f467dc23"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/tobogganCustom",
+				"name": "tobogganCustom",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/tobogganCustom",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "scala"
+					}
+				},
+				"source": [
+					"%%spark\r\n",
+					"// import org.apache.spark.sql.internal.SQLConf\r\n",
+					"// var s = SQLConf.get.useDeprecatedKafkaOffsetFetching"
+				],
+				"execution_count": 40
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "scala"
+					}
+				},
+				"source": [
+					"%%spark\r\n",
+					"import org.apache.spark.eventhubs._\r\n",
+					"import org.apache.spark.sql.SparkSession\r\n",
+					"import org.apache.spark.sql.streaming.Trigger\r\n",
+					"\r\n",
+					"val conString = \"Endpoint=sb://streaming-demo-eh.servicebus.windows.net/;SharedAccessKeyName=dv_laptop_policy;SharedAccessKey=XfiEYwsSy/BnfxEDaJyxfjg/7b80+PeVSCx2RjI8zgw=;EntityPath=stream-demo-1\"\r\n",
+					"val eventHubsConf = EventHubsConf(conString).setStartingPosition(EventPosition.fromEndOfStream)\r\n",
+					"\r\n",
+					"// Create a stream that reads data from the specified Event Hub.\r\n",
+					"val spark = SparkSession.builder.appName(\"SimpleStream\").getOrCreate()\r\n",
+					"val eventHubStream = {spark.readStream\r\n",
+					"   .format(\"eventhubs\")\r\n",
+					"   .options(eventHubsConf.toMap)\r\n",
+					"   .load()\r\n",
+					"   }\r\n",
+					"\r\n",
+					"val query = {\r\n",
+					"   eventHubStream.writeStream\r\n",
+					"   .option(\"checkpointLocation\", \"abfss://demo@datakickstartadls.dfs.core.windows.net/checkpoints/confluent13\")\r\n",
+					"  .format(\"delta\")\r\n",
+					"  .outputMode(\"append\")\r\n",
+					"  .trigger(Trigger.ProcessingTime(\"10 seconds\"))\r\n",
+					"  .start(\"abfss://demo@datakickstartadls.dfs.core.windows.net/confluent_test13\")\r\n",
+					"}\r\n",
+					"\r\n",
+					"query.processAllAvailable()\r\n",
+					"query.stop()\r\n",
+					"// query.awaitTermination()"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

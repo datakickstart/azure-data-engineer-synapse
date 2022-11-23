@@ -1,0 +1,20 @@
+{
+	"name": "MetadataDrivenCopyTask_q6h_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MetadataDrivenCopyTask_q6h_20220818"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MainControlTable_q6h"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,130 @@
+{
+	"name": "SourceDataset_69u",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "datakickstartadls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "nyctaxi/tripdata/yellow_parquet",
+				"fileSystem": "demo"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "vendorID",
+				"type": "UTF8"
+			},
+			{
+				"name": "tpepPickupDateTime",
+				"type": "INT96"
+			},
+			{
+				"name": "tpepDropoffDateTime",
+				"type": "INT96"
+			},
+			{
+				"name": "passengerCount",
+				"type": "INT32"
+			},
+			{
+				"name": "tripDistance",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "puLocationId",
+				"type": "UTF8"
+			},
+			{
+				"name": "doLocationId",
+				"type": "UTF8"
+			},
+			{
+				"name": "startLon",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "startLat",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "endLon",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "endLat",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "rateCodeId",
+				"type": "INT32"
+			},
+			{
+				"name": "storeAndFwdFlag",
+				"type": "UTF8"
+			},
+			{
+				"name": "paymentType",
+				"type": "UTF8"
+			},
+			{
+				"name": "fareAmount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "extra",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "mtaTax",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "improvementSurcharge",
+				"type": "UTF8"
+			},
+			{
+				"name": "tipAmount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "tollsAmount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "totalAmount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "pickupDt",
+				"type": "DATE"
+			},
+			{
+				"name": "dropoffDt",
+				"type": "DATE"
+			},
+			{
+				"name": "tipPct",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "Borough",
+				"type": "UTF8"
+			},
+			{
+				"name": "PickupZone",
+				"type": "UTF8"
+			},
+			{
+				"name": "PickupServiceZone",
+				"type": "UTF8"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

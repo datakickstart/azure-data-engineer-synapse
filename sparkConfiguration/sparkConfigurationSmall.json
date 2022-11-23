@@ -1,0 +1,14 @@
+{
+	"name": "sparkConfigurationSmall",
+	"properties": {
+		"configs": {
+			"spark.sql.shuffle.partitions": "36"
+		},
+		"created": "2022-07-28T23:09:53.49Z",
+		"createdBy": "training@dustinvannoy.com",
+		"annotations": [],
+		"configMergeRule": {
+			"artifact.currentOperation.spark.sql.shuffle.partitions": "replace"
+		}
+	}
+}

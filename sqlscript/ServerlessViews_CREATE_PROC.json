@@ -1,0 +1,17 @@
+{
+	"name": "ServerlessViews_CREATE_PROC",
+	"properties": {
+		"content": {
+			"query": "USE demo\nGO\n\nCREATE OR ALTER PROC CreateView @db_folder nvarchar(50), @name nvarchar(50)\nAS\nBEGIN\n\nDECLARE @statement VARCHAR(MAX)\nSET @statement = N'CREATE OR ALTER VIEW [' + @name + '] AS\n        SELECT *\n        FROM OPENROWSET(\n            BULK ''https://datakickstartadls.dfs.core.windows.net/raw/' + @db_folder + '/' + @name + '/*.parquet'',\n            FORMAT=''Parquet''\n        ) AS [result]\n'\n\nEXEC (@statement)\n\nEND\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "demo",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

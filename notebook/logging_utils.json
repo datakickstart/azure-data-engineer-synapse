@@ -1,0 +1,242 @@
+{
+	"name": "logging_utils",
+	"properties": {
+		"folder": {
+			"name": "utils"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo31",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 1,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "true",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "1",
+				"spark.autotune.trackingId": "1260c3f4-4b52-4a8a-9f3f-a67a82ec55fe"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo31",
+				"name": "demo31",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"# Parameters:\r\n",
+					"# Set test_run to True only when running tests. Keep it as False (default) for normal use\r\n",
+					"test_run= True #False"
+				],
+				"execution_count": 103
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from dataclasses import dataclass, asdict\r\n",
+					"import time\r\n",
+					"\r\n",
+					"@dataclass\r\n",
+					"class LogMessage():\r\n",
+					"    message: str\r\n",
+					"    job_name: str\r\n",
+					"    destination_database_name: str = \"\"\r\n",
+					"    destination_table_name: str = \"\"\r\n",
+					"    source_table_name: str =\"\"\r\n",
+					"    duration: str = \"0\"\r\n",
+					"    job_start_time: str = \"\"\r\n",
+					"    job_end_time: str = \"\"\r\n",
+					"\r\n",
+					"base_message = None\r\n",
+					"\r\n",
+					"def print_message(start=False, stop=False):\r\n",
+					"    msg_str = '{\"message\": \"' + base_message.message + '\", \"job_name\": \"' + base_message.job_name + '\"'\r\n",
+					"    if start or stop:\r\n",
+					"        msg_str += ', \"destination\": \"' + base_message.destination_database_name + '.' + base_message.destination_table_name + '\"'\r\n",
+					"    if stop:\r\n",
+					"         msg_str += ', \"duration\": \"' + base_message.duration + '\"'\r\n",
+					"    msg_str += '}'\r\n",
+					"    return msg_str\r\n",
+					"\r\n",
+					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
+					"logger = spark_log4j.LogManager.getLogger(\"synapse_dataplatform\")"
+				],
+				"execution_count": 112
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def start_logging(job_name, destination_database_name, destination_table_name, source_table_name):\r\n",
+					"    job_start_time = time.perf_counter()\r\n",
+					"    \r\n",
+					"    global base_message\r\n",
+					"    base_message = LogMessage(message=\"\", job_name=job_name, destination_database_name=destination_database_name, destination_table_name=destination_table_name, job_start_time=job_start_time)\r\n",
+					"\r\n",
+					"    base_message.message=f\"Starting logger for {job_name}\"\r\n",
+					"    logger.info(print_message(start=True))"
+				],
+				"execution_count": 105
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def stop_logging(job_name):\r\n",
+					"    base_message.job_end_time = time.perf_counter()\r\n",
+					"    base_message.duration = str(base_message.job_end_time - base_message.job_start_time)\r\n",
+					"    base_message.message = f\"Stopping logger for {job_name}\"\r\n",
+					"    logger.info(print_message(stop=True))"
+				],
+				"execution_count": 106
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_informational_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.info(print_message())"
+				],
+				"execution_count": 107
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_warning_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.warn(print_message())"
+				],
+				"execution_count": 108
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def log_error_message(message):\r\n",
+					"    base_message.message = message\r\n",
+					"    logger.error(print_message())"
+				],
+				"execution_count": 109
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"if test_run:\r\n",
+					"    start_logging('log_test_job', 'log_test_destination_db', 'log_test_destination_table', 'log_test_source_table')\r\n",
+					"    log_informational_message('Log test informational message')\r\n",
+					"    stop_logging('log_test_job')"
+				],
+				"execution_count": 113
+			}
+		]
+	}
+}

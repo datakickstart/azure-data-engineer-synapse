@@ -1,0 +1,17 @@
+{
+	"name": "data_lake_serverless_analytics",
+	"properties": {
+		"content": {
+			"query": "USE demo\nGO\n\nSELECT \n  paymentType,\n  count(1) recordCount,\n  avg(tipAmount) avgTip\nFROM yellow_trips_delta\nWHERE paymentType is not null\n--and year_month='2018_12'\nGROUP BY paymentType\nORDER BY recordCount desc\n\n\nSELECT \n  cast(tpepPickupDatetime as date) PickupDate,\n  PickupZone,\n  Borough,\n  count(1) recordCount,\n  avg(tipAmount) avgTip\nFROM yellow_trips_delta\nWHERE paymentType is not null\nGROUP BY \n  cast(tpepPickupDatetime as date),\n  PickupZone,\n  Borough\n\nSELECT \n  pickupDt,\n  count(1) recordCount,\n  avg(tipAmount) avgTip\nFROM yellow_trips_parquet\nWHERE paymentType is not null\nGROUP BY \n  pickupDt\n\n\nSELECT TOP 10 *\nFROM yellow_trips_delta\nWHERE tpepPickupDatetime between '2018-12-01' and '2018-12-02'\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "demo",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

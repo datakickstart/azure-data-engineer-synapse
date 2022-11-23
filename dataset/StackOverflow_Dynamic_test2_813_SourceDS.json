@@ -1,0 +1,43 @@
+{
+	"name": "StackOverflow_Dynamic_test2_813_SourceDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlStackoverflow",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"database_name": {
+					"value": "@dataset().cw_ls_database_name",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"cw_schema": {
+				"type": "String"
+			},
+			"cw_table": {
+				"type": "String"
+			},
+			"cw_ls_database_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "StackOverflow_Dynamic_test2_813_20220726"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().cw_schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().cw_table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

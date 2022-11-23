@@ -1,0 +1,150 @@
+{
+	"name": "data_lake_load_dotnet",
+	"properties": {
+		"folder": {
+			"name": "Data Lake Demo"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"language_info": {
+				"name": "csharp"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo1",
+				"name": "demo1",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "2.4",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"source": [
+					"## .NET Spark (C#): Load to Data Lake\n",
+					"\n",
+					"A good reference for additional syntax examples: https://github.com/dotnet/spark/blob/master/examples/Microsoft.Spark.CSharp.Examples/Sql/Batch/Basic.cs\n",
+					""
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"using Microsoft.Spark.Sql;\n",
+					"using Microsoft.Spark.Sql.Types;\n",
+					"using static Microsoft.Spark.Sql.Functions;\n",
+					"\n",
+					"var yellowSourcePath = \"wasbs://nyctlc@azureopendatastorage.blob.core.windows.net/yellow/puYear=2018/puMonth=*/*.parquet\";\n",
+					"var taxiZoneSourcePath = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_zone_lookup.csv\";\n",
+					"\n",
+					"var taxiZonePath = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_zone\";\n",
+					"var taxiRatePath = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_rate_code\";\n",
+					"var yellowDeltaPath = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/tripdata/yellow_delta\";\n",
+					"\n",
+					"var dateFormat = \"yyyy-MM-dd HH:mm:ss\";\n",
+					"\n",
+					"// Define a schema that Spark understands. This is one of several ways to do it.\n",
+					"var taxiZoneSchema = new StructType(new[]\n",
+					"{\n",
+					"    new StructField(\"LocationID\", new IntegerType()),\n",
+					"    new StructField(\"Borough\", new StringType()),\n",
+					"    new StructField(\"Zone\", new StringType()),\n",
+					"    new StructField(\"ServiceZone\", new StringType()),\n",
+					"});"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"DataFrame zoneDF = spark.Read()\n",
+					"    .Option(\"header\",\"true\")\n",
+					"    .Schema(taxiZoneSchema)\n",
+					"    .Csv(taxiZoneSourcePath); \n",
+					"\n",
+					"zoneDF.Write().Format(\"delta\").Mode(\"overwrite\").Save(taxiZonePath);\n",
+					"\n",
+					"zoneDF.Show();"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"DataFrame inputDF = spark.Read()\n",
+					"    .Option(\"inferSchema\", \"true\")\n",
+					"    .Parquet(yellowSourcePath);\n",
+					"\n",
+					"// Take your pick on how to transform, withColumn or SQL Expressions. Only one of these is needed.\n",
+					"// Option A\n",
+					"// var transformedDF = inputDF\n",
+					"//     .WithColumn(\"yearMonth\", RegexpReplace(Substring(Col(\"tpepPickupDatetime\"),1,7), \"-\", \"_\"))\n",
+					"//     .WithColumn(\"pickupDt\", ToDate(Col(\"tpepPickupDatetime\"), dateFormat)) \n",
+					"//     .WithColumn(\"dropoffDt\", ToDate(Col(\"tpepDropoffDatetime\"), dateFormat))\n",
+					"//     .WithColumn(\"tipPct\", Col(\"tipAmount\") / Col(\"totalAmount\"));\n",
+					"  \n",
+					"// Option B\n",
+					"var transformedDF = inputDF.SelectExpr(\n",
+					"                  \"*\",\n",
+					"                  \"replace(left(tpepPickupDatetime, 7),\\\"-\\\",\\\"_\\\") as yearMonth\",\n",
+					"                  $\"to_date(tpepPickupDatetime, \\\"{dateFormat}\\\") as pickupDt\",\n",
+					"                  $\"to_date(tpepDropoffDatetime, \\\"{dateFormat}\\\") as dropoffDt\",\n",
+					"                  $\"tipAmount/totalAmount as tipPct\");\n",
+					"\n",
+					"DataFrame zoneDF = spark.Read().Format(\"delta\").Load(taxiZonePath);\n",
+					"\n",
+					"// Join to bring in Taxi Zone data\n",
+					"var tripDF = transformedDF\n",
+					"     .Join(zoneDF, transformedDF[\"PULocationID\"] == zoneDF[\"LocationID\"], \"left\").Drop(\"LocationID\")\n",
+					"     .WithColumnRenamed(\"Burough\", \"PickupBurrough\")\n",
+					"     .WithColumnRenamed(\"Zone\", \"PickupZone\")\n",
+					"     .WithColumnRenamed(\"ServiceZone\", \"PickupServiceZone\");\n",
+					"\n",
+					"tripDF.Write().Mode(\"overwrite\").PartitionBy(\"yearMonth\").Format(\"delta\").Save(yellowDeltaPath);"
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"source": [
+					"## Test read\n",
+					"Simple test read of the delta formatted data that was just saved.\n",
+					""
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"var testDF = spark.Read().Format(\"delta\").Load(yellowDeltaPath).Limit(20);\n",
+					"testDF.Select(\"VendorID\", \"tpepPickupDatetime\", \"tpepDropoffDatetime\", \"passengerCount\").Show();"
+				]
+			}
+		]
+	}
+}

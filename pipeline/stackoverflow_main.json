@@ -1,0 +1,118 @@
+{
+	"name": "stackoverflow_main",
+	"properties": {
+		"activities": [
+			{
+				"name": "StackOverflow_API_Ingest",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Repos/training@dustinvannoy.com/datakickstart-databricks-workspace/stackoverflow/stackoverflow_ingest_api"
+				},
+				"linkedServiceName": {
+					"referenceName": "datakickstart_databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "StackOverflow_File_Ingest",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "stackoverflow_ingest_adls",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "spark31",
+						"type": "BigDataPoolReference"
+					},
+					"conf": {
+						"spark.dynamicAllocation.enabled": null,
+						"spark.dynamicAllocation.minExecutors": null,
+						"spark.dynamicAllocation.maxExecutors": null
+					},
+					"numExecutors": null
+				}
+			},
+			{
+				"name": "StackOverflowCopyTask_g91_TopLevel",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "StackOverflow_API_Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "StackOverflow_File_Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "StackOverflowCopyTask_g91_TopLevel",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Refined_table_create",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "StackOverflowCopyTask_g91_TopLevel",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "synapse_serverless_datakickstart_ls",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "CREATE EXTERNAL TABLE refined.fact_stackoverflow_post AS\nselect * from raw_stackoverflow.posts"
+						}
+					]
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-08-23T04:35:54Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

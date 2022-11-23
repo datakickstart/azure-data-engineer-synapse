@@ -1,0 +1,190 @@
+{
+	"name": "Spark_Kafka_Streaming_BATCH",
+	"properties": {
+		"folder": {
+			"name": "Streaming"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "confluent1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 1,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "1",
+				"spark.autotune.trackingId": "f5a0422d-b014-4a14-861f-65bfb87c00fb"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/confluent1",
+				"name": "confluent1",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/confluent1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 10
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# import pkg_resources\r\n",
+					"# for d in pkg_resources.working_set:\r\n",
+					"#      print(d)"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# %%configure -f\r\n",
+					"# {\r\n",
+					"#     \"conf\": {\r\n",
+					"#         \"spark.jars\": \"abfss://demo@datakickstartadls.dfs.core.windows.net/jars/*\",\r\n",
+					"\r\n",
+					"#     }\r\n",
+					"# }"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"##Define Variables\r\n",
+					"\r\n",
+					"confluentBootstrapServers = \"pkc-41973.westus2.azure.confluent.cloud:9092\"\r\n",
+					"\r\n",
+					"confluentApiKey = \"HBZAZ3BKC57KW5XI\"\r\n",
+					"\r\n",
+					"confluentSecret = \"tvEWW4vI+X1M81Y0BU7knPqlgllBthCs+sU7Zsiv27CyJlII2qRTF208kVkf0q4/\"\r\n",
+					"\r\n",
+					"confluentRegistryApiKey = \"PYSZJLGMTTVXUFNH\"\r\n",
+					"\r\n",
+					"confluentRegistrySecret = \"DVUSBKSeXQO533EDfowOkHL1ncmkuNHee48NOK82D1rY/0NqFqofxgyMpZb1pA0Y\"\r\n",
+					"\r\n",
+					"confluentTopicName = \"video_usage\"\r\n",
+					"\r\n",
+					"\r\n",
+					"##Import Library\r\n",
+					"\r\n",
+					"import pyspark.sql.functions as fn\r\n",
+					"from pyspark.sql.types import StringType\r\n",
+					"\r\n",
+					"##Create Spark Readstream\r\n",
+					"\r\n",
+					"clickstreamTestDf = (\r\n",
+					"  spark\r\n",
+					"  .read\r\n",
+					"  .format(\"kafka\")\r\n",
+					"  .option(\"kafka.bootstrap.servers\", confluentBootstrapServers)\r\n",
+					"  .option(\"kafka.security.protocol\", \"SASL_SSL\")\r\n",
+					"  .option(\"kafka.sasl.jaas.config\", \"org.apache.kafka.common.security.plain.PlainLoginModule required username='{}' password='{}';\".format(confluentApiKey, confluentSecret))\r\n",
+					"  .option(\"kafka.sasl.mechanism\", \"PLAIN\")\r\n",
+					"  .option(\"subscribe\", confluentTopicName)\r\n",
+					"  .option(\"startingOffsets\", \"earliest\")\r\n",
+					"  .option(\"failOnDataLoss\", \"false\")\r\n",
+					"  .load()\r\n",
+					"  # .select(fn.col(\"value\").cast(StringType()).alias(\"value\"))\r\n",
+					")\r\n",
+					"\r\n",
+					"clickstreamTestDf = (clickstreamTestDf\r\n",
+					".withColumn('key', fn.col(\"key\").cast(StringType()))\r\n",
+					"  .select('topic', 'partition', 'offset', 'timestamp', 'timestampType', 'key')\r\n",
+					")\r\n",
+					"\r\n",
+					"# query = (clickstreamTestDf.writeStream\r\n",
+					"#   .option(\"checkpointLocation\", \"abfss://demo@datakickstartadls.dfs.core.windows.net/checkpoints/confluent9\")\r\n",
+					"#   .format(\"delta\")\r\n",
+					"#   .outputMode(\"append\")\r\n",
+					"#   .trigger(once=True)\r\n",
+					"#   .start(\"abfss://demo@datakickstartadls.dfs.core.windows.net/confluent_test9\")\r\n",
+					"# )\r\n",
+					"\r\n",
+					"\r\n",
+					"(clickstreamTestDf.write\r\n",
+					"  .format(\"delta\")\r\n",
+					"  .mode(\"append\")\r\n",
+					"  .save(\"abfss://demo@datakickstartadls.dfs.core.windows.net/confluent_test12\")\r\n",
+					")\r\n",
+					"# print(query.status)\r\n",
+					"# print(query.recentProgress)\r\n",
+					"# query.awaitTermination()\r\n",
+					"# import time\r\n",
+					"# time.sleep(300)\r\n",
+					"# query.stop()\r\n",
+					""
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

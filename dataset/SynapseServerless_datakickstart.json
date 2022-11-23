@@ -1,0 +1,138 @@
+{
+	"name": "SynapseServerless_datakickstart",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "synapse_serverless_datakickstart_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "vendorID",
+				"type": "nvarchar"
+			},
+			{
+				"name": "tpepPickupDateTime",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "tpepDropoffDateTime",
+				"type": "datetime2",
+				"scale": 7
+			},
+			{
+				"name": "passengerCount",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "tripDistance",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "puLocationId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "doLocationId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "startLon",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "startLat",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "endLon",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "endLat",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "rateCodeId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "storeAndFwdFlag",
+				"type": "nvarchar"
+			},
+			{
+				"name": "paymentType",
+				"type": "nvarchar"
+			},
+			{
+				"name": "fareAmount",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "extra",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "mtaTax",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "improvementSurcharge",
+				"type": "nvarchar"
+			},
+			{
+				"name": "tipAmount",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "tollsAmount",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "totalAmount",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "pickupDt",
+				"type": "date"
+			},
+			{
+				"name": "dropoffDt",
+				"type": "date"
+			},
+			{
+				"name": "tipPct",
+				"type": "float",
+				"precision": 15
+			},
+			{
+				"name": "Borough",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PickupZone",
+				"type": "nvarchar"
+			},
+			{
+				"name": "PickupServiceZone",
+				"type": "nvarchar"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

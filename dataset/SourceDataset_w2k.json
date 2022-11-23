@@ -1,0 +1,21 @@
+{
+	"name": "SourceDataset_w2k",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "dvtrainingadls_blobsas_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "nyctaxi/tripdata/yellow_parquet",
+				"container": "demo"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

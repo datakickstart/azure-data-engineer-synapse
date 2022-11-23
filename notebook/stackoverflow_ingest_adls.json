@@ -1,0 +1,303 @@
+{
+	"name": "stackoverflow_ingest_adls",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo31",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "0da24480-ab58-4edd-a9e1-c00158e33abd"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo31",
+				"name": "demo31",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## StackOverflow file ingest to Raw and Refined\r\n",
+					"This notebook will ingest data from the external ADLS environment to our data lake.\r\n",
+					"\r\n",
+					"Steps:\r\n",
+					"1. Read all tables from source (external) ADLS path.\r\n",
+					"2. Save in raw form as parquet tables in raw_stackoverflow database.\r\n",
+					"3. Enrich, transform, and save as delta tables in the refined database."
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import current_timestamp\r\n",
+					"\r\n",
+					"source_base_path = \"abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"raw_base_path = \"abfss://raw@datakickstartadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"refined_base_path = \"abfss://refined@datakickstartadls.dfs.core.windows.net/\""
+				],
+				"execution_count": 12
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"job_name = \"stackoverflow_ingest\"\r\n",
+					"destination_database_name = \"raw\"\r\n",
+					"destination_table_name = \"\"\r\n",
+					"source_table_name = \"stackoverflow_parquet_files\"\r\n",
+					"start_logging(job_name, destination_database_name, destination_table_name, source_table_name)"
+				],
+				"execution_count": 14
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# This is the simple Apache Spark code that represents what we are doing\r\n",
+					"# df = spark.read.parquet('abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/badges')\r\n",
+					"# df.saveAsTable('raw_stackoverflow.badges')"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"def get_table_paths(base_path):\r\n",
+					"    \"\"\"Return list of items for file path and folder/table.\r\n",
+					"\r\n",
+					"    Args:\r\n",
+					"        base_path (str): Azure path to get data directories (must be authenticated), \r\n",
+					"            formatted abfss://<container>@<storage_account>.dfs.core.windows.net/[root_directory]\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        list[(path, table_name)]: List of tuples, each item has full path in ADLS and the folder name (usually used as table name)\r\n",
+					"    \r\n",
+					"    \"\"\"\r\n",
+					"    table_paths = mssparkutils.fs.ls(base_path)\r\n",
+					"    return [(file_info.path, file_info.name) for file_info in table_paths]\r\n",
+					"\r\n",
+					"\r\n",
+					"def save_table(df, table, partition_str=None, format=\"delta\"):\r\n",
+					"    \"\"\"Save Spark table using format provided (parquet or delta).\r\n",
+					"    \r\n",
+					"    Args:\r\n",
+					"        df (DataFrame): Data to save as Spark table.\r\n",
+					"        table (str): Name of destination table\r\n",
+					"        partition_str (str, optional): Column names used to partition folders as comma delimited string, for example 'colA,colB'. No partitions created if not provided.\r\n",
+					"        format (str, optional): Defaults to 'delta'\r\n",
+					"\r\n",
+					"    Returns:\r\n",
+					"        None\r\n",
+					"\r\n",
+					"    \"\"\"\r\n",
+					"    options = {\r\n",
+					"        \"mergeSchema\": \"true\"\r\n",
+					"    }\r\n",
+					"    writer = df.write.mode(\"overwrite\").options(**options).format(format)\r\n",
+					"    if partition_str:\r\n",
+					"        writer = writer.partitionBy(partition_str)\r\n",
+					"    writer.saveAsTable(table)"
+				],
+				"execution_count": 15
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"spark.sql(f\"CREATE DATABASE IF NOT EXISTS raw_stackoverflow LOCATION '{raw_base_path}'\")\r\n",
+					"\r\n",
+					"table_list = get_table_paths(source_base_path)\r\n",
+					"\r\n",
+					"print(table_list)"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"for path, table in table_list:  \r\n",
+					"    df = spark.read.parquet(path)\r\n",
+					"    save_table(df, \"raw_stackoverflow.\" + table, format=\"parquet\")\r\n",
+					"    log_informational_message(f\"Saved raw table {table}\")"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"spark.sql(\"CREATE DATABASE IF NOT EXISTS refined LOCATION 'abfss://refined@datakickstartadls.dfs.core.windows.net/refined'\")\r\n",
+					"\r\n",
+					"table_list = get_table_paths(raw_base_path)"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"for path, table in table_list:  \r\n",
+					"    df = spark.read.parquet(path)\r\n",
+					"    df = df.withColumn(\"refresh_date\", current_timestamp())\r\n",
+					"    save_table(df, \"refined.\" + table, format=\"delta\")\r\n",
+					"    log_informational_message(f\"Saved refined table {table}\")"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": 28
+			}
+		]
+	}
+}

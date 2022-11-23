@@ -1,0 +1,130 @@
+{
+	"name": "stackoverflow_analysis",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo31",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 1,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "true",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "1",
+				"spark.autotune.trackingId": "472247c6-5761-431e-ad3c-204b9c18ed9e"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo31",
+				"name": "demo31",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 10
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"Select\r\n",
+					"    posts.PostTypeId\r\n",
+					"    ,posttypes.Type\r\n",
+					"    ,min(CreationDate) FirstCreationDate\r\n",
+					"    ,max(LastActivityDate) LastActivityDate\r\n",
+					"    ,max(ClosedDate) LastClosedDate\r\n",
+					"    ,count(ClosedDate) ClosedCount\r\n",
+					"    ,sum(FavoriteCount) FavoriteCount\r\n",
+					"    ,sum(CommentCount) CommentCount\r\n",
+					"    ,sum(AnswerCount) AnswerCount\r\n",
+					"    ,sum(Score) ScoreTotal\r\n",
+					"    ,sum(ViewCount) ViewCount\r\n",
+					"    ,count(1) Posts\r\n",
+					"FROM raw_stackoverflow.posts\r\n",
+					"  JOIN raw_stackoverflow.posttypes\r\n",
+					"    ON posts.PostTypeId = posttypes.Id\r\n",
+					"  WHERE Type in ('Question', 'Answer')\r\n",
+					"GROUP BY PostTypeId, Type"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"Select\r\n",
+					"    posts.PostTypeId\r\n",
+					"    ,posttypes.Type\r\n",
+					"    ,posts.Tags\r\n",
+					"    ,min(CreationDate) FirstCreationDate\r\n",
+					"    ,max(LastActivityDate) LastActivityDate\r\n",
+					"    ,max(ClosedDate) LastClosedDate\r\n",
+					"    ,count(ClosedDate) ClosedCount\r\n",
+					"    ,sum(FavoriteCount) FavoriteCount\r\n",
+					"    ,sum(CommentCount) CommentCount\r\n",
+					"    ,sum(AnswerCount) AnswerCount\r\n",
+					"    ,sum(Score) ScoreTotal\r\n",
+					"    ,sum(ViewCount) ViewCount\r\n",
+					"    ,count(1) Posts\r\n",
+					"FROM raw_stackoverflow.posts\r\n",
+					"  JOIN raw_stackoverflow.posttypes\r\n",
+					"    ON posts.PostTypeId = posttypes.Id\r\n",
+					"  WHERE Type in ('Question', 'Answer')\r\n",
+					"GROUP BY PostTypeId, Type, Tags"
+				],
+				"execution_count": 9
+			}
+		]
+	}
+}

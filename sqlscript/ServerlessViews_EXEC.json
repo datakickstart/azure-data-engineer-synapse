@@ -1,0 +1,17 @@
+{
+	"name": "ServerlessViews_EXEC",
+	"properties": {
+		"content": {
+			"query": "USE demo\nGO\n\nEXEC CreateView 'cu', 'current';",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "demo",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

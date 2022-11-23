@@ -1,0 +1,11 @@
+{
+	"name": "demokv",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureKeyVault",
+		"typeProperties": {
+			"baseUrl": "https://dvtrainingkv.vault.azure.net/"
+		}
+	}
+}

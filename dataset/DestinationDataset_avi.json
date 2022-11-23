@@ -1,0 +1,17 @@
+{
+	"name": "DestinationDataset_avi",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SnowflakeDemo_YellowTrips",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "PUBLIC",
+			"table": "TRIPS_YELLOW_PARQUET"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

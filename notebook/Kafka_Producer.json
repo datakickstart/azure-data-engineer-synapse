@@ -1,0 +1,198 @@
+{
+	"name": "Kafka_Producer",
+	"properties": {
+		"folder": {
+			"name": "Streaming"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "tobogganCustom",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "8fbfdf87-24f0-4920-b9f7-a498de785686"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "scala"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/tobogganCustom",
+				"name": "tobogganCustom",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/tobogganCustom",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"import java.sql.Timestamp\r\n",
+					"import java.time.Instant\r\n",
+					"import java.util.Properties\r\n",
+					"\r\n",
+					"import scala.util.Random\r\n",
+					"import org.apache.kafka.clients.producer._\r\n",
+					"\r\n",
+					"  val bootstrapServers = \"streaming-demo-eh.servicebus.windows.net:9093\"\r\n",
+					"  val mode: String = \"eventhubs\"\r\n",
+					"\r\n",
+					"  val props = new Properties()\r\n",
+					"  props.put(\"key.serializer\", \"org.apache.kafka.common.serialization.StringSerializer\")\r\n",
+					"  props.put(\"value.serializer\", \"org.apache.kafka.common.serialization.StringSerializer\")\r\n",
+					"\r\n",
+					"  if (mode.toLowerCase == \"local\") {\r\n",
+					"    println(\"Running producer in local mode\")\r\n",
+					"    props.put(\"bootstrap.servers\", \"localhost:9092\")\r\n",
+					"  } else if (mode.toLowerCase == \"confluent\") {\r\n",
+					"    println(\"Running producer in Confluent Cloud mode\")\r\n",
+					"    val kafkaAPIKey = \"\"\r\n",
+					"    val kafkaAPISecret = \"\"\r\n",
+					"    props.put(\"bootstrap.servers\", bootstrapServers)\r\n",
+					"    props.put(\"security.protocol\", \"SASL_SSL\")\r\n",
+					"    props.put(\"sasl.jaas.config\", s\"org.apache.kafka.common.security.plain.PlainLoginModule  required username='$kafkaAPIKey'   password='$kafkaAPISecret';\")\r\n",
+					"    props.put(\"sasl.mechanism\", \"PLAIN\")\r\n",
+					"    // Required for correctness in Apache Kafka clients prior to 2.6\r\n",
+					"    props.put(\"client.dns.lookup\", \"use_all_dns_ips\")\r\n",
+					"    // Best practice for Kafka producer to prevent data loss\r\n",
+					"    props.put(\"acks\", \"all\")\r\n",
+					"  } else if (mode.toLowerCase==\"eventhubs\") {\r\n",
+					"    println(\"Running producer to Eventhubs\")\r\n",
+					"    val saslPwd = \"Endpoint=sb://streaming-demo-eh.servicebus.windows.net/;SharedAccessKeyName=tobogganPolicy;SharedAccessKey=bNaWYEtNNtgEy5JbSBvPsgkPzjgEFX+T6KhcFs2uGJM=;EntityPath=stream-demo-1\"\r\n",
+					"    props.put(\"bootstrap.servers\", bootstrapServers)\r\n",
+					"    props.put(\"security.protocol\", \"SASL_SSL\")\r\n",
+					"    props.put(\"sasl.jaas.config\", \"org.apache.kafka.common.security.plain.PlainLoginModule  required username='$ConnectionString'  \" + s\" password='$saslPwd';\")\r\n",
+					"    props.put(\"sasl.mechanism\", \"PLAIN\")\r\n",
+					"  }\r\n",
+					"\r\n",
+					"def produceRecord(producer: KafkaProducer[String, String], record: ProducerRecord[String, String]) = {\r\n",
+					"    val metadata = producer.send(record)\r\n",
+					"    printf(s\"sent to topic %s: record(key=%s value=%s) \" +\r\n",
+					"      \"meta(partition=%d, offset=%d)\\n\",\r\n",
+					"      record.topic(), record.key(), record.value(),\r\n",
+					"      metadata.get().partition(),\r\n",
+					"      metadata.get().offset()\r\n",
+					"    )\r\n",
+					"  }\r\n",
+					" \r\n",
+					"  def produceSingleVideoUsage(user: Int, usageId: Int): Unit = {\r\n",
+					"    val usageTopic = \"stream_demo_1\"\r\n",
+					"\r\n",
+					"    val producer = new KafkaProducer[String, String](props)\r\n",
+					"\r\n",
+					"    val randomCompleted = () => { if (Random.nextInt(2) == 1) true else false }\r\n",
+					"    val randomDuration= () => { Random.nextInt(360) }\r\n",
+					"    val timestampNow = () => Timestamp.from(Instant.now)\r\n",
+					"\r\n",
+					"    try {\r\n",
+					"      val usageInfo = s\"\"\"{\"usageId\": $usageId, \"user\": \"user${user}\", \"completed\": ${randomCompleted()}, \"durationSeconds\": ${randomDuration()}, \"eventTimestamp\": \"${timestampNow()}\"}\"\"\"\r\n",
+					"      val record = new ProducerRecord[String, String](usageTopic, usageId.toString, usageInfo)\r\n",
+					"\r\n",
+					"      //println(usageInfo)\r\n",
+					"      produceRecord(producer, record)\r\n",
+					"\r\n",
+					"    }catch{\r\n",
+					"      case e:Exception => e.printStackTrace()\r\n",
+					"    }finally {\r\n",
+					"      producer.close()\r\n",
+					"    }\r\n",
+					"  }\r\n",
+					"\r\n",
+					" def writeUsageWithPlan(): Unit = {\r\n",
+					"    val usageTopic = \"stream-demo-1\"\r\n",
+					"\r\n",
+					"    val producer = new KafkaProducer[String, String](props)\r\n",
+					"\r\n",
+					"    val randomCompleted = () => {\r\n",
+					"      if (Random.nextInt(2) == 1) true else false\r\n",
+					"    }\r\n",
+					"    val randomUser = () => {\r\n",
+					"      Random.nextInt(100)\r\n",
+					"    }\r\n",
+					"    val randomDuration = () => {\r\n",
+					"      Random.nextInt(360)\r\n",
+					"    }\r\n",
+					"    val timestampNow = () => Timestamp.from(Instant.now)\r\n",
+					"    val startInstant = Instant.now\r\n",
+					"\r\n",
+					"    val maxRecordId = 10000\r\n",
+					"    val sleepMilliseconds = 500\r\n",
+					"    val randomizeSleep = () => Random.nextInt(9) + 1\r\n",
+					"    val pauseThreshold = 0 // at which record should pause start being enforced, 0 means all records\r\n",
+					"\r\n",
+					"    try {\r\n",
+					"      for (i <- 0 to maxRecordId) {\r\n",
+					"        val usageInfo = s\"\"\"{\"usageId\": $i, \"user\": \"user${randomUser()}\", \"completed\": ${randomCompleted()}, \"durationSeconds\": ${randomDuration()}, \"eventTimestamp\": \"${timestampNow()}\"}\"\"\"\r\n",
+					"        val record = new ProducerRecord[String, String](usageTopic, i.toString, usageInfo)\r\n",
+					"\r\n",
+					"        println(usageInfo)\r\n",
+					"        produceRecord(producer, record)\r\n",
+					"\r\n",
+					"        if (i > pauseThreshold) {\r\n",
+					"          \r\n",
+					"          Thread.sleep(sleepMilliseconds / randomizeSleep())\r\n",
+					"        }\r\n",
+					"      }\r\n",
+					"    } catch {\r\n",
+					"      case e: Exception => e.printStackTrace()\r\n",
+					"    } finally {\r\n",
+					"      producer.close()\r\n",
+					"    }\r\n",
+					"  }\r\n",
+					"\r\n",
+					"  writeUsageWithPlan()"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

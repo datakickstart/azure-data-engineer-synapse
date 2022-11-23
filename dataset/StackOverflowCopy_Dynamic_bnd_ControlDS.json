@@ -1,0 +1,20 @@
+{
+	"name": "StackOverflowCopy_Dynamic_bnd_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "StackOverflowCopy_Dynamic_bnd_20220728"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "StackOverflowControlTable"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,37 @@
+{
+	"name": "StackOverflowCopy_Dynamic_bnd_SourceDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "StackOverflow2",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"cw_schema": {
+				"type": "String"
+			},
+			"cw_table": {
+				"type": "String"
+			},
+			"cw_ls_source_database": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "StackOverflowCopy_Dynamic_bnd_20220728"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().cw_schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().cw_table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

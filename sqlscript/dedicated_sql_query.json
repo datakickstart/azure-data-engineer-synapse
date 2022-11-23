@@ -1,0 +1,17 @@
+{
+	"name": "dedicated_sql_query",
+	"properties": {
+		"content": {
+			"query": "SELECT \n  pickupDt,\n  count(1) recordCount,\n  avg(tipAmount) avgTip\nFROM yellow_trips\nWHERE paymentType is not null\nGROUP BY \n  pickupDt\n\n  SELECT \n  pickupDt,\n  PickupZone,\n  Borough,\n  count(1) recordCount,\n  avg(tipAmount) avgTip\nFROM yellow_trips\nWHERE paymentType is not null\nGROUP BY \n  pickupDt\n  ,PickupZone\n  ,Borough\nHAVING count(1) > 1000",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "sql01",
+				"poolName": "sql01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
