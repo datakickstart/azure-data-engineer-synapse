@@ -38,6 +38,9 @@
 		"synapse_serverless_datakickstart_ls_connectionString": {
 			"value": ""
 		},
+		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
+			"value": "https://datakickstartadls.blob.core.windows.net/"
+		},
 		"datakickstart-synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://datakickstartadls.dfs.core.windows.net"
 		},
@@ -58,9 +61,6 @@
 		},
 		"stagingblob_sasUri": {
 			"value": ""
-		},
-		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
-			"value": "https://datakickstartadls.blob.core.windows.net/"
 		}
 	}
 }

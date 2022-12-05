@@ -51,6 +51,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'synapse_serverless_datakickstart_ls'"
 		},
+		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://datakickstartadls.blob.core.windows.net/"
+		},
 		"datakickstart-synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://datakickstartadls.dfs.core.windows.net"
@@ -78,10 +82,6 @@
 		"stagingblob_sasUri": {
 			"type": "secureString",
 			"metadata": "Secure string for 'sasUri' of 'stagingblob'"
-		},
-		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
-			"type": "string",
-			"defaultValue": "https://datakickstartadls.blob.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -3149,6 +3149,26 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
 				"[concat(variables('workspaceId'), '/linkedServices/demokv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LogOutput_datakickstartadls')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"serviceEndpoint": "[parameters('LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint')]",
+					"accountKind": "StorageV2"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
 			]
 		},
 		{
@@ -7530,8 +7550,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30,
 					"targetSparkConfiguration": "sparkLogging"
@@ -7539,7 +7558,6 @@
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"spark_log4j = sc._jvm.org.apache.log4j\r\n",
 							"logger = spark_log4j.LogManager.getLogger(\"datakickstart\")"
@@ -9770,16 +9788,18 @@
 					"spark.synapse.logAnalytics.enabled": "true",
 					"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26",
 					"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
-					"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key"
+					"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key",
+					"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv"
 				},
-				"created": "2022-12-05T10:09:54.0770000-08:00",
+				"created": "2022-12-05T12:43:56.1590000-08:00",
 				"createdBy": "training@dustinvannoy.com",
 				"annotations": [],
 				"configMergeRule": {
 					"artifact.currentOperation.spark.synapse.logAnalytics.enabled": "replace",
 					"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace",
 					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.name": "replace",
-					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace"
+					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace",
+					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace"
 				}
 			},
 			"dependsOn": []
@@ -10324,26 +10344,6 @@
 			},
 			"dependsOn": [],
 			"location": "westus"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/LogOutput_datakickstartadls')]",
-			"type": "Microsoft.Synapse/workspaces/linkedServices",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"serviceEndpoint": "[parameters('LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint')]",
-					"accountKind": "StorageV2"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
 		}
 	]
 }
