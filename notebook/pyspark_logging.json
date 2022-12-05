@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "demo2022",
+			"referenceName": "sparkLogging",
 			"type": "BigDataPoolReference"
 		},
 		"targetSparkConfiguration": {
@@ -25,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "43cd9217-d970-4bb4-b8b1-33034461bb6e"
+				"spark.autotune.trackingId": "c6a01724-1010-42e6-aecd-f52190864608"
 			}
 		},
 		"metadata": {
@@ -39,16 +39,16 @@
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo2022",
-				"name": "demo2022",
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/sparkLogging",
+				"name": "sparkLogging",
 				"type": "Spark",
-				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo2022",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkLogging",
 				"auth": {
 					"type": "AAD",
 					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.2",
-				"nodeCount": 10,
+				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
 				"automaticScaleJobs": false
@@ -61,9 +61,11 @@
 				"cell_type": "code",
 				"source": [
 					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
-					"logger = spark_log4j.LogManager.getLogger(\"datakickstart\")"
+					"spark_log4j2 = spark._jvm.org.apache.logging.log4j\r\n",
+					"logger = spark_log4j.LogManager.getLogger(\"com.datakickstart.synapse\")\r\n",
+					"logger2 = spark_log4j.LogManager.getLogger(\"com.datakickstart.synapse2\")"
 				],
-				"execution_count": 1
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
@@ -79,9 +81,32 @@
 					}
 				},
 				"source": [
-					"logger.info(\"Test simple log message\")"
+					"l = spark_log4j.LogManager.getLogger(\"test1\")\r\n",
+					"lroot = spark_log4j.LogManager.getLogger(\"test_root\")"
 				],
-				"execution_count": 2
+				"execution_count": 10
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"logger.info(\"Test simple log message\")\r\n",
+					"logger2.info(\"Test simple log message\")\r\n",
+					"l.info(\"Test message 1\")\r\n",
+					"l.warn(\"Test message warn 1\")\r\n",
+					"lroot.info(\"Test message with root logger\")"
+				],
+				"execution_count": 14
 			},
 			{
 				"cell_type": "code",
@@ -106,7 +131,61 @@
 					"}\r\n",
 					"logger.info(json.dumps(msg))"
 				],
-				"execution_count": 3
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df3 = spark.createDataFrame([[\"test1\"],[\"test5\"]])"
+				],
+				"execution_count": 12
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df3.show()"
+				],
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
 			}
 		]
 	}

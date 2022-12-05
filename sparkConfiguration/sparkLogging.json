@@ -8,7 +8,7 @@
 			"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key",
 			"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv"
 		},
-		"created": "2022-12-05T12:43:56.1590000-08:00",
+		"created": "2022-12-05T13:40:52.5680000-08:00",
 		"createdBy": "training@dustinvannoy.com",
 		"annotations": [],
 		"configMergeRule": {
