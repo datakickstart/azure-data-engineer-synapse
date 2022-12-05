@@ -10,6 +10,10 @@
 			"referenceName": "pythoncustom",
 			"type": "BigDataPoolReference"
 		},
+		"targetSparkConfiguration": {
+			"referenceName": "sparkLogging",
+			"type": "SparkConfigurationReference"
+		},
 		"sessionProperties": {
 			"driverMemory": "28g",
 			"driverCores": 4,
@@ -21,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "true",
 				"spark.dynamicAllocation.minExecutors": "1",
 				"spark.dynamicAllocation.maxExecutors": "1",
-				"spark.autotune.trackingId": "460c0720-dd13-4ca3-bf74-4adb568d5079"
+				"spark.autotune.trackingId": "8a3f332c-e4d3-4f91-a8c5-ea0584c651dc"
 			}
 		},
 		"metadata": {
@@ -41,16 +45,16 @@
 				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pythoncustom",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.1",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": true
 			},
-			"sessionKeepAliveTimeout": 30
+			"sessionKeepAliveTimeout": 30,
+			"targetSparkConfiguration": "sparkLogging"
 		},
 		"cells": [
 			{
