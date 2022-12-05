@@ -1,0 +1,18 @@
+{
+	"name": "sparkLogging",
+	"properties": {
+		"configs": {
+			"spark.synapse.logAnalytics.enabled": "true",
+			"spark.synapse.logAnalytics.secret": "vk3dQI1NJU8LCe2NMxdNvuEYWUq38ecVMl0ZHg66NJE/8aliA5FKhmBTzGrrRTOfUDAhcXb/l0HsM70INZ4D+A==",
+			"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26"
+		},
+		"created": "2022-12-05T09:02:19.1850000-08:00",
+		"createdBy": "training@dustinvannoy.com",
+		"annotations": [],
+		"configMergeRule": {
+			"artifact.currentOperation.spark.synapse.logAnalytics.enabled": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.secret": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace"
+		}
+	}
+}
