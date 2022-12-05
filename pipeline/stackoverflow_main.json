@@ -107,7 +107,17 @@
 							"type": "Query",
 							"text": "CREATE EXTERNAL TABLE refined.fact_stackoverflow_post AS\nselect * from raw_stackoverflow.posts"
 						}
-					]
+					],
+					"logSettings": {
+						"logDestination": "ExternalStore",
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "LogOutput_datakickstartadls",
+								"type": "LinkedServiceReference"
+							},
+							"path": "demo/synapse_logs"
+						}
+					}
 				}
 			}
 		],
