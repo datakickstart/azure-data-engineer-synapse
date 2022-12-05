@@ -98,6 +98,20 @@
 													"enableStaging": false,
 													"parallelCopies": 4,
 													"validateDataConsistency": false,
+													"logSettings": {
+														"enableCopyActivityLog": true,
+														"copyActivityLogSettings": {
+															"logLevel": "Info",
+															"enableReliableLogging": false
+														},
+														"logLocationSettings": {
+															"linkedServiceName": {
+																"referenceName": "LogOutput_datakickstartadls",
+																"type": "LinkedServiceReference"
+															},
+															"path": "demo/synapse_logs"
+														}
+													},
 													"dataIntegrationUnits": 16,
 													"translator": {
 														"value": "@json(item().CopyActivitySettings).translator",
