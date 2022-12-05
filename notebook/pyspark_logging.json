@@ -25,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "true",
 				"spark.dynamicAllocation.minExecutors": "1",
 				"spark.dynamicAllocation.maxExecutors": "1",
-				"spark.autotune.trackingId": "c4feed4a-1e9d-4ab3-a5f4-d4ae3ec4c45b"
+				"spark.autotune.trackingId": "9c1ed406-7b4b-4ccd-8b5b-0598cca54b31"
 			}
 		},
 		"metadata": {
@@ -63,7 +63,7 @@
 					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
 					"logger = spark_log4j.LogManager.getLogger(\"datakickstart\")"
 				],
-				"execution_count": 1
+				"execution_count": 7
 			},
 			{
 				"cell_type": "code",
@@ -81,7 +81,7 @@
 				"source": [
 					"logger.info(\"Test simple log message\")"
 				],
-				"execution_count": 2
+				"execution_count": 8
 			},
 			{
 				"cell_type": "code",
@@ -106,7 +106,7 @@
 					"}\r\n",
 					"logger.info(json.dumps(msg))"
 				],
-				"execution_count": 3
+				"execution_count": 10
 			}
 		]
 	}

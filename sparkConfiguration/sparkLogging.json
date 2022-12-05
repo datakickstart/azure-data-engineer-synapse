@@ -7,7 +7,7 @@
 			"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
 			"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key"
 		},
-		"created": "2022-12-05T09:56:15.9370000-08:00",
+		"created": "2022-12-05T10:09:54.0770000-08:00",
 		"createdBy": "training@dustinvannoy.com",
 		"annotations": [],
 		"configMergeRule": {
