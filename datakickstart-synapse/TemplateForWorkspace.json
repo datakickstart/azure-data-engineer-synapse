@@ -7460,6 +7460,10 @@
 					"referenceName": "pythoncustom",
 					"type": "BigDataPoolReference"
 				},
+				"targetSparkConfiguration": {
+					"referenceName": "sparkLogging",
+					"type": "SparkConfigurationReference"
+				},
 				"sessionProperties": {
 					"driverMemory": "28g",
 					"driverCores": 4,
@@ -7471,7 +7475,7 @@
 						"spark.dynamicAllocation.enabled": "true",
 						"spark.dynamicAllocation.minExecutors": "1",
 						"spark.dynamicAllocation.maxExecutors": "1",
-						"spark.autotune.trackingId": "460c0720-dd13-4ca3-bf74-4adb568d5079"
+						"spark.autotune.trackingId": "c4feed4a-1e9d-4ab3-a5f4-d4ae3ec4c45b"
 					}
 				},
 				"metadata": {
@@ -7491,16 +7495,15 @@
 						"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pythoncustom",
 						"auth": {
 							"type": "AAD",
-							"authResource": "https://dev.azuresynapse.net",
-							"authHeader": null
+							"authResource": "https://dev.azuresynapse.net"
 						},
 						"sparkVersion": "3.1",
 						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28,
-						"extraHeader": null
+						"memory": 28
 					},
-					"sessionKeepAliveTimeout": 30
+					"sessionKeepAliveTimeout": 30,
+					"targetSparkConfiguration": "sparkLogging"
 				},
 				"cells": [
 					{
@@ -7510,7 +7513,7 @@
 							"logger = spark_log4j.LogManager.getLogger(\"datakickstart\")"
 						],
 						"outputs": [],
-						"execution_count": 9
+						"execution_count": 1
 					},
 					{
 						"cell_type": "code",
@@ -7529,7 +7532,7 @@
 							"logger.info(\"Test simple log message\")"
 						],
 						"outputs": [],
-						"execution_count": 10
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
@@ -7555,11 +7558,13 @@
 							"logger.info(json.dumps(msg))"
 						],
 						"outputs": [],
-						"execution_count": 11
+						"execution_count": 3
 					}
 				]
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/sparkConfigurations/sparkLogging')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('workspaceName'), '/python_beautifulsoup')]",
@@ -7705,7 +7710,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "ae04af1a-357d-4fd4-93bd-43e63aa86b41"
+						"spark.autotune.trackingId": "41cf2d47-d4d3-4097-a717-de8efcd30d79"
 					}
 				},
 				"metadata": {
@@ -7730,8 +7735,7 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30,
 					"targetSparkConfiguration": "sparkLogging"
@@ -9732,16 +9736,18 @@
 			"properties": {
 				"configs": {
 					"spark.synapse.logAnalytics.enabled": "true",
-					"spark.synapse.logAnalytics.secret": "vk3dQI1NJU8LCe2NMxdNvuEYWUq38ecVMl0ZHg66NJE/8aliA5FKhmBTzGrrRTOfUDAhcXb/l0HsM70INZ4D+A==",
-					"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26"
+					"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26",
+					"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
+					"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key"
 				},
-				"created": "2022-12-05T09:02:19.1850000-08:00",
+				"created": "2022-12-05T09:56:15.9370000-08:00",
 				"createdBy": "training@dustinvannoy.com",
 				"annotations": [],
 				"configMergeRule": {
 					"artifact.currentOperation.spark.synapse.logAnalytics.enabled": "replace",
-					"artifact.currentOperation.spark.synapse.logAnalytics.secret": "replace",
-					"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace"
+					"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace",
+					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.name": "replace",
+					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace"
 				}
 			},
 			"dependsOn": []
@@ -10265,9 +10271,9 @@
 				"isComputeIsolationEnabled": false,
 				"sparkConfigProperties": {
 					"configurationType": "Artifact",
-					"filename": "sparkConfigurationSmall",
-					"content": "{\"name\":\"sparkConfigurationSmall\",\"properties\":{\"configs\":{\"spark.sql.shuffle.partitions\":\"36\"},\"annotations\":[],\"type\":\"Microsoft.Synapse/workspaces/sparkconfigurations\",\"description\":\"\",\"notes\":\"\",\"created\":\"2022-07-28T23:09:53.49Z\",\"createdBy\":\"training@dustinvannoy.com\",\"configMergeRule\":{\"admin.currentOperation.spark.sql.shuffle.partitions\":\"replace\"}}}",
-					"time": "2022-12-02T22:51:10.95404Z"
+					"filename": "sparkLogging",
+					"content": "{\"name\":\"sparkLogging\",\"properties\":{\"configs\":{\"spark.synapse.logAnalytics.enabled\":\"true\",\"spark.synapse.logAnalytics.secret\":\"vk3dQI1NJU8LCe2NMxdNvuEYWUq38ecVMl0ZHg66NJE/8aliA5FKhmBTzGrrRTOfUDAhcXb/l0HsM70INZ4D+A==\",\"spark.synapse.logAnalytics.workspaceId\":\"041a7d31-3f9e-4b27-989c-114d98731f26\"},\"annotations\":[],\"type\":\"Microsoft.Synapse/workspaces/sparkconfigurations\",\"description\":\"\",\"notes\":\"\",\"created\":\"2022-12-05T09:02:19.1850000-08:00\",\"createdBy\":\"training@dustinvannoy.com\",\"configMergeRule\":{\"admin.currentOperation.spark.synapse.logAnalytics.enabled\":\"replace\",\"admin.currentOperation.spark.synapse.logAnalytics.secret\":\"replace\",\"admin.currentOperation.spark.synapse.logAnalytics.workspaceId\":\"replace\"}}}",
+					"time": "2022-12-05T17:04:11.1767221Z"
 				},
 				"sessionLevelPackagesEnabled": false,
 				"annotations": []
