@@ -78,6 +78,10 @@
 		"stagingblob_sasUri": {
 			"type": "secureString",
 			"metadata": "Secure string for 'sasUri' of 'stagingblob'"
+		},
+		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
+			"type": "string",
+			"defaultValue": "https://datakickstartadls.blob.core.windows.net/"
 		}
 	},
 	"variables": {
@@ -1042,6 +1046,20 @@
 															"enableStaging": false,
 															"parallelCopies": 4,
 															"validateDataConsistency": false,
+															"logSettings": {
+																"enableCopyActivityLog": true,
+																"copyActivityLogSettings": {
+																	"logLevel": "Info",
+																	"enableReliableLogging": false
+																},
+																"logLocationSettings": {
+																	"linkedServiceName": {
+																		"referenceName": "LogOutput_datakickstartadls",
+																		"type": "LinkedServiceReference"
+																	},
+																	"path": "demo/synapse_logs"
+																}
+															},
 															"dataIntegrationUnits": 16,
 															"translator": {
 																"value": "@json(item().CopyActivitySettings).translator",
@@ -1464,7 +1482,8 @@
 				"[concat(variables('workspaceId'), '/datasets/StackOverflowCopyTask_g91_ControlDS')]",
 				"[concat(variables('workspaceId'), '/datasets/StackOverflowCopyTask_g91_SourceDS')]",
 				"[concat(variables('workspaceId'), '/datasets/StackOverflowCopyTask_g91_DestinationDS')]",
-				"[concat(variables('workspaceId'), '/linkedServices/sandboxsqlserverless')]"
+				"[concat(variables('workspaceId'), '/linkedServices/sandboxsqlserverless')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LogOutput_datakickstartadls')]"
 			]
 		},
 		{
@@ -1849,7 +1868,17 @@
 									"type": "Query",
 									"text": "CREATE EXTERNAL TABLE refined.fact_stackoverflow_post AS\nselect * from raw_stackoverflow.posts"
 								}
-							]
+							],
+							"logSettings": {
+								"logDestination": "ExternalStore",
+								"logLocationSettings": {
+									"linkedServiceName": {
+										"referenceName": "LogOutput_datakickstartadls",
+										"type": "LinkedServiceReference"
+									},
+									"path": "demo/synapse_logs"
+								}
+							}
 						}
 					}
 				],
@@ -1865,7 +1894,8 @@
 				"[concat(variables('workspaceId'), '/notebooks/stackoverflow_ingest_adls')]",
 				"[concat(variables('workspaceId'), '/bigDataPools/spark31')]",
 				"[concat(variables('workspaceId'), '/pipelines/StackOverflowCopyTask_g91_TopLevel')]",
-				"[concat(variables('workspaceId'), '/linkedServices/synapse_serverless_datakickstart_ls')]"
+				"[concat(variables('workspaceId'), '/linkedServices/synapse_serverless_datakickstart_ls')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LogOutput_datakickstartadls')]"
 			]
 		},
 		{
@@ -7475,7 +7505,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "decd7e13-52c3-4256-b260-bbf543eeaa45"
+						"spark.autotune.trackingId": "43cd9217-d970-4bb4-b8b1-33034461bb6e"
 					}
 				},
 				"metadata": {
@@ -10294,6 +10324,26 @@
 			},
 			"dependsOn": [],
 			"location": "westus"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LogOutput_datakickstartadls')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"serviceEndpoint": "[parameters('LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint')]",
+					"accountKind": "StorageV2"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
 		}
 	]
 }

@@ -58,6 +58,9 @@
 		},
 		"stagingblob_sasUri": {
 			"value": ""
+		},
+		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
+			"value": "https://datakickstartadls.blob.core.windows.net/"
 		}
 	}
 }
