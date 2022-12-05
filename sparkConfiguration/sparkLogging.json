@@ -6,9 +6,10 @@
 			"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26",
 			"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
 			"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key",
-			"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv"
+			"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv",
+			"spark.synapse.logAnalytics.filter.loggerName.match": "com.datakickstart.datakickstart_synapse,datakickstart,org.datakickstart.synapse,org.apache.spark.SparkContext,com.microsoft.azure.synapse,"
 		},
-		"created": "2022-12-05T13:40:52.5680000-08:00",
+		"created": "2022-12-05T14:08:24.4110000-08:00",
 		"createdBy": "training@dustinvannoy.com",
 		"annotations": [],
 		"configMergeRule": {
@@ -16,7 +17,8 @@
 			"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace",
 			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.name": "replace",
 			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace",
-			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace"
+			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.filter.loggerName.match": "replace"
 		}
 	}
 }
