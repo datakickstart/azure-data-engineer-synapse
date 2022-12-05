@@ -1,0 +1,63 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "datakickstart-synapse"
+		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": ""
+		},
+		"AzureSqlStackoverflow_connectionString": {
+			"value": ""
+		},
+		"Snowflake1_connectionString": {
+			"value": ""
+		},
+		"SnowflakeDemo_YellowTrips_connectionString": {
+			"value": ""
+		},
+		"StackOverflow2_connectionString": {
+			"value": ""
+		},
+		"StackOverflowTest2_connectionString": {
+			"value": ""
+		},
+		"datakickstart-synapse-WorkspaceDefaultSqlServer_connectionString": {
+			"value": ""
+		},
+		"datakickstart_databricks_ls_accessToken": {
+			"value": ""
+		},
+		"dvtrainingadls_accountKey": {
+			"value": ""
+		},
+		"sandboxsqlserverless_connectionString": {
+			"value": ""
+		},
+		"synapse_serverless_datakickstart_ls_connectionString": {
+			"value": ""
+		},
+		"datakickstart-synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://datakickstartadls.dfs.core.windows.net"
+		},
+		"datakickstartadls_ls_properties_typeProperties_url": {
+			"value": "https://datakickstartadls.dfs.core.windows.net"
+		},
+		"demokv_properties_typeProperties_baseUrl": {
+			"value": "https://dvtrainingkv.vault.azure.net/"
+		},
+		"dvtrainingadls_properties_typeProperties_url": {
+			"value": "https://dvtrainingadls.dfs.core.windows.net"
+		},
+		"dvtrainingadls_blobsas_ls_sasUri": {
+			"value": ""
+		},
+		"nyc_tlc_yellow_sasUri": {
+			"value": ""
+		},
+		"stagingblob_sasUri": {
+			"value": ""
+		}
+	}
+}
