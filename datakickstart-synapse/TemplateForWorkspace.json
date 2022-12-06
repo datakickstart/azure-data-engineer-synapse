@@ -78,10 +78,6 @@
 		"nyc_tlc_yellow_sasUri": {
 			"type": "secureString",
 			"metadata": "Secure string for 'sasUri' of 'nyc_tlc_yellow'"
-		},
-		"stagingblob_sasUri": {
-			"type": "secureString",
-			"metadata": "Secure string for 'sasUri' of 'stagingblob'"
 		}
 	},
 	"variables": {
@@ -3448,25 +3444,6 @@
 				"type": "AzureSqlDatabase",
 				"typeProperties": {
 					"connectionString": "[parameters('sandboxsqlserverless_connectionString')]"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/stagingblob')]",
-			"type": "Microsoft.Synapse/workspaces/linkedServices",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"type": "AzureBlobStorage",
-				"typeProperties": {
-					"sasUri": "[parameters('stagingblob_sasUri')]"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -7534,7 +7511,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "7c1a2d79-62be-470e-9a3f-a2416acbdaa4"
+						"spark.autotune.trackingId": "b76f45c3-5169-4a21-b21f-f5507b2229bf"
 					}
 				},
 				"metadata": {
@@ -8439,7 +8416,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "da00fde5-1656-4664-b005-8d1637accce1"
+						"spark.autotune.trackingId": "d07a46ae-7aaa-4f64-868f-8fe7f885f905"
 					}
 				},
 				"metadata": {
@@ -8464,7 +8441,8 @@
 						"sparkVersion": "3.2",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30
 				},
@@ -8577,6 +8555,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"def get_table_paths(base_path):\r\n",
 							"    \"\"\"Return list of items for file path and folder/table.\r\n",

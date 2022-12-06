@@ -58,9 +58,6 @@
 		},
 		"nyc_tlc_yellow_sasUri": {
 			"value": ""
-		},
-		"stagingblob_sasUri": {
-			"value": ""
 		}
 	}
 }
