@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "true",
 				"spark.dynamicAllocation.minExecutors": "1",
 				"spark.dynamicAllocation.maxExecutors": "1",
-				"spark.autotune.trackingId": "1260c3f4-4b52-4a8a-9f3f-a67a82ec55fe"
+				"spark.autotune.trackingId": "61c6e826-27e6-470b-9fe4-87cd7b81049e"
 			}
 		},
 		"metadata": {
@@ -41,14 +41,13 @@
 				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.1",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": true
 			},
 			"sessionKeepAliveTimeout": 30
 		},
@@ -105,7 +104,7 @@
 					"    return msg_str\r\n",
 					"\r\n",
 					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
-					"logger = spark_log4j.LogManager.getLogger(\"synapse_dataplatform\")"
+					"logger = spark_log4j.LogManager.getLogger(\"com.datakickstart.datakickstart_synapse\")"
 				],
 				"execution_count": 112
 			},
