@@ -1801,14 +1801,16 @@
 							},
 							"snapshot": true,
 							"sparkPool": {
-								"referenceName": "spark31",
+								"referenceName": "sparkLogging",
 								"type": "BigDataPoolReference"
 							},
+							"executorSize": null,
 							"conf": {
 								"spark.dynamicAllocation.enabled": null,
 								"spark.dynamicAllocation.minExecutors": null,
 								"spark.dynamicAllocation.maxExecutors": null
 							},
+							"driverSize": null,
 							"numExecutors": null
 						}
 					},
@@ -1892,7 +1894,7 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/linkedServices/datakickstart_databricks_ls')]",
 				"[concat(variables('workspaceId'), '/notebooks/stackoverflow_ingest_adls')]",
-				"[concat(variables('workspaceId'), '/bigDataPools/spark31')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/sparkLogging')]",
 				"[concat(variables('workspaceId'), '/pipelines/StackOverflowCopyTask_g91_TopLevel')]",
 				"[concat(variables('workspaceId'), '/linkedServices/synapse_serverless_datakickstart_ls')]",
 				"[concat(variables('workspaceId'), '/linkedServices/LogOutput_datakickstartadls')]"
@@ -3332,7 +3334,14 @@
 						"type": "SecureString",
 						"value": "[parameters('datakickstart_databricks_ls_accessToken')]"
 					},
-					"existingClusterId": "0708-204424-cxaiw42a"
+					"newClusterNodeType": "Standard_DS3_v2",
+					"newClusterNumOfWorker": "2",
+					"newClusterSparkEnvVars": {
+						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
+					},
+					"newClusterVersion": "10.4.x-scala2.12",
+					"newClusterInitScripts": [],
+					"clusterOption": "Fixed"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -7507,7 +7516,7 @@
 				"nbformat": 4,
 				"nbformat_minor": 2,
 				"bigDataPool": {
-					"referenceName": "demo2022",
+					"referenceName": "sparkLogging",
 					"type": "BigDataPoolReference"
 				},
 				"targetSparkConfiguration": {
@@ -7525,7 +7534,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "43cd9217-d970-4bb4-b8b1-33034461bb6e"
+						"spark.autotune.trackingId": "7c1a2d79-62be-470e-9a3f-a2416acbdaa4"
 					}
 				},
 				"metadata": {
@@ -7539,18 +7548,19 @@
 						"name": "python"
 					},
 					"a365ComputeOptions": {
-						"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo2022",
-						"name": "demo2022",
+						"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/sparkLogging",
+						"name": "sparkLogging",
 						"type": "Spark",
-						"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo2022",
+						"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkLogging",
 						"auth": {
 							"type": "AAD",
 							"authResource": "https://dev.azuresynapse.net"
 						},
 						"sparkVersion": "3.2",
-						"nodeCount": 10,
+						"nodeCount": 3,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30,
 					"targetSparkConfiguration": "sparkLogging"
@@ -7558,9 +7568,12 @@
 				"cells": [
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"spark_log4j = sc._jvm.org.apache.log4j\r\n",
-							"logger = spark_log4j.LogManager.getLogger(\"datakickstart\")"
+							"spark_log4j2 = spark._jvm.org.apache.logging.log4j\r\n",
+							"logger = spark_log4j.LogManager.getLogger(\"datakickstart.synapse\")\r\n",
+							"logger2 = spark_log4j.LogManager.getLogger(\"com.datakickstart.datakickstart_synapse\")"
 						],
 						"outputs": [],
 						"execution_count": 1
@@ -7579,10 +7592,34 @@
 							}
 						},
 						"source": [
-							"logger.info(\"Test simple log message\")"
+							"l = spark_log4j.LogManager.getLogger(\"test1\")\r\n",
+							"lroot = spark_log4j.LogManager.getLogger(\"test_root\")"
 						],
 						"outputs": [],
 						"execution_count": 2
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"logger.info(\"Test simple log message\")\r\n",
+							"logger2.info(\"Test simple log message\")\r\n",
+							"l.info(\"Test message 1\")\r\n",
+							"l.warn(\"Test message warn 1\")\r\n",
+							"lroot.info(\"Test message with root logger\")"
+						],
+						"outputs": [],
+						"execution_count": 3
 					},
 					{
 						"cell_type": "code",
@@ -7608,7 +7645,64 @@
 							"logger.info(json.dumps(msg))"
 						],
 						"outputs": [],
-						"execution_count": 3
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"df3 = spark.createDataFrame([[\"test1\"],[\"test5\"]])"
+						],
+						"outputs": [],
+						"execution_count": 5
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							"df3.show()"
+						],
+						"outputs": [],
+						"execution_count": 6
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"jupyter": {
+								"source_hidden": false,
+								"outputs_hidden": false
+							},
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						],
+						"outputs": [],
+						"execution_count": null
 					}
 				]
 			},
@@ -9789,9 +9883,10 @@
 					"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26",
 					"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
 					"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key",
-					"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv"
+					"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv",
+					"spark.synapse.logAnalytics.filter.loggerName.match": "com.datakickstart.datakickstart_synapse,com.datakickstart.synapse,metrics,org.apache.spark.*,com.microsoft.azure.synapse.*.*"
 				},
-				"created": "2022-12-05T12:43:56.1590000-08:00",
+				"created": "2022-12-05T20:18:36.3270000-08:00",
 				"createdBy": "training@dustinvannoy.com",
 				"annotations": [],
 				"configMergeRule": {
@@ -9799,7 +9894,8 @@
 					"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace",
 					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.name": "replace",
 					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace",
-					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace"
+					"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace",
+					"artifact.currentOperation.spark.synapse.logAnalytics.filter.loggerName.match": "replace"
 				}
 			},
 			"dependsOn": []
@@ -10344,6 +10440,15 @@
 			},
 			"dependsOn": [],
 			"location": "westus"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sparkLogging')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": []
+			},
+			"dependsOn": []
 		}
 	]
 }
