@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "scala_tests",
+						"referenceName": "data_lake_load",
 						"type": "NotebookReference"
 					},
 					"parameters": {
@@ -57,7 +57,10 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "CREATE EXTERNAL TABLE refined.fact_stackoverflow_post AS\nselect * from raw_stackoverflow.posts"
+							"text": {
+								"value": "DROP EXTERNAL TABLE demo.dbo.fact_stackoverflow_post;\nGO\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts\nGO",
+								"type": "Expression"
+							}
 						}
 					],
 					"logSettings": {
