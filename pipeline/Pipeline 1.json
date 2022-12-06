@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"notebook": {
-						"referenceName": "data_lake_load",
+						"referenceName": "pyspark_logging",
 						"type": "NotebookReference"
 					},
 					"parameters": {
@@ -29,11 +29,17 @@
 						}
 					},
 					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "sparkLogging2",
+						"type": "BigDataPoolReference"
+					},
+					"executorSize": null,
 					"conf": {
 						"spark.dynamicAllocation.enabled": null,
 						"spark.dynamicAllocation.minExecutors": null,
 						"spark.dynamicAllocation.maxExecutors": null
 					},
+					"driverSize": null,
 					"numExecutors": null
 				}
 			},
@@ -58,7 +64,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "DROP EXTERNAL TABLE demo.dbo.fact_stackoverflow_post;\nGO\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts\nGO",
+								"value": "\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts\nGO",
 								"type": "Expression"
 							}
 						}
