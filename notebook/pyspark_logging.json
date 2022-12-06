@@ -25,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "55f1ae89-071e-4d09-87ae-f6bccd2c1338"
+				"spark.autotune.trackingId": "a54ac525-209d-4e71-83e4-0be68db78214"
 			}
 		},
 		"metadata": {
@@ -61,7 +61,8 @@
 				"cell_type": "code",
 				"source": [
 					"spark_log4j = sc._jvm.org.apache.log4j\r\n",
-					"logger = spark_log4j.LogManager.getLogger(\"com.datakickstart.datakickstart_synapse\")\r\n",
+					"logger = spark_log4j.LogManager.getLogger(\"org.apache.spark.SparkContext\")\r\n",
+					"# logger = spark_log4j.LogManager.getLogger(\"com.datakickstart.datakickstart_synapse\")\r\n",
 					"\r\n",
 					"# logger = spark_log4j.LogManager.getRootLogger()\r\n",
 					"# spark_log4j2 = spark._jvm.org.apache.logging.log4j\r\n",
