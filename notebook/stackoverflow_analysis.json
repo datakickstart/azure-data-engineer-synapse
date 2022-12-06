@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "demo31",
+			"referenceName": "sparkLogging2",
 			"type": "BigDataPoolReference"
 		},
 		"sessionProperties": {
@@ -15,13 +15,13 @@
 			"driverCores": 4,
 			"executorMemory": "28g",
 			"executorCores": 4,
-			"numExecutors": 1,
+			"numExecutors": 2,
 			"runAsWorkspaceSystemIdentity": false,
 			"conf": {
-				"spark.dynamicAllocation.enabled": "true",
-				"spark.dynamicAllocation.minExecutors": "1",
-				"spark.dynamicAllocation.maxExecutors": "1",
-				"spark.autotune.trackingId": "472247c6-5761-431e-ad3c-204b9c18ed9e"
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "6fe629e6-eaf9-435b-9bd3-840775a29002"
 			}
 		},
 		"metadata": {
@@ -35,20 +35,19 @@
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo31",
-				"name": "demo31",
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/sparkLogging2",
+				"name": "sparkLogging2",
 				"type": "Spark",
-				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkLogging2",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
-				"sparkVersion": "3.1",
+				"sparkVersion": "3.2",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 10
 		},
@@ -65,7 +64,7 @@
 					"%%sql\r\n",
 					"Select\r\n",
 					"    posts.PostTypeId\r\n",
-					"    ,posttypes.Type\r\n",
+					"    ,users._Reputation\r\n",
 					"    ,min(CreationDate) FirstCreationDate\r\n",
 					"    ,max(LastActivityDate) LastActivityDate\r\n",
 					"    ,max(ClosedDate) LastClosedDate\r\n",
@@ -77,12 +76,11 @@
 					"    ,sum(ViewCount) ViewCount\r\n",
 					"    ,count(1) Posts\r\n",
 					"FROM raw_stackoverflow.posts\r\n",
-					"  JOIN raw_stackoverflow.posttypes\r\n",
-					"    ON posts.PostTypeId = posttypes.Id\r\n",
-					"  WHERE Type in ('Question', 'Answer')\r\n",
-					"GROUP BY PostTypeId, Type"
+					"  JOIN raw_stackoverflow.users\r\n",
+					"    ON posts._OwnerUserId = users._Id\r\n",
+					"GROUP BY PostTypeId, _Reputation"
 				],
-				"execution_count": 8
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
@@ -105,7 +103,6 @@
 					"%%sql\r\n",
 					"Select\r\n",
 					"    posts.PostTypeId\r\n",
-					"    ,posttypes.Type\r\n",
 					"    ,posts.Tags\r\n",
 					"    ,min(CreationDate) FirstCreationDate\r\n",
 					"    ,max(LastActivityDate) LastActivityDate\r\n",
@@ -118,12 +115,9 @@
 					"    ,sum(ViewCount) ViewCount\r\n",
 					"    ,count(1) Posts\r\n",
 					"FROM raw_stackoverflow.posts\r\n",
-					"  JOIN raw_stackoverflow.posttypes\r\n",
-					"    ON posts.PostTypeId = posttypes.Id\r\n",
-					"  WHERE Type in ('Question', 'Answer')\r\n",
-					"GROUP BY PostTypeId, Type, Tags"
+					"GROUP BY PostTypeId, Tags"
 				],
-				"execution_count": 9
+				"execution_count": null
 			}
 		]
 	}
