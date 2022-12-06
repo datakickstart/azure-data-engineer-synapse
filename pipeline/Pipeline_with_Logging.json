@@ -116,7 +116,11 @@
 							"value": "@pipeline().parameters.auth_signature",
 							"type": "Expression"
 						},
-						"Log-Type": "DataKickstartPipeline"
+						"Log-Type": "DataKickstartPipeline",
+						"x-ms-date": {
+							"value": "@{formatDateTime(utcnow(), 'EEE, dd MMM yyyy HH:mm:ss GMT')}",
+							"type": "Expression"
+						}
 					},
 					"body": {
 						"value": "{\n\"TimeGeneratedPipeline\": @{pipeline().TriggerTime}\n\"message\": \"Script completed successfully.\"\n\"notebook\": \"stackoverflow_fact_create\",\n  \"platform\": \"Synapse Pipelines\",\n  \"version\": 1.0\n}",
