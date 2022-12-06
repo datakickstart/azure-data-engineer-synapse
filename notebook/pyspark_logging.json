@@ -25,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "8b0c6284-160b-4941-aa33-abdf7560abf9"
+				"spark.autotune.trackingId": "98e6127a-b53a-4733-8c1c-78c8de3fe7d0"
 			}
 		},
 		"metadata": {
@@ -65,7 +65,7 @@
 					"logger = spark_log4j.LogManager.getLogger(\"datakickstart.synapse\")\r\n",
 					"logger2 = spark_log4j.LogManager.getLogger(\"com.datakickstart.datakickstart_synapse\")"
 				],
-				"execution_count": 7
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -84,7 +84,7 @@
 					"l = spark_log4j.LogManager.getLogger(\"test1\")\r\n",
 					"lroot = spark_log4j.LogManager.getLogger(\"test_root\")"
 				],
-				"execution_count": 8
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -106,7 +106,7 @@
 					"l.warn(\"Test message warn 1\")\r\n",
 					"lroot.info(\"Test message with root logger\")"
 				],
-				"execution_count": 9
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -131,7 +131,7 @@
 					"}\r\n",
 					"logger.info(json.dumps(msg))"
 				],
-				"execution_count": 10
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
@@ -149,7 +149,7 @@
 				"source": [
 					"df3 = spark.createDataFrame([[\"test1\"],[\"test5\"]])"
 				],
-				"execution_count": 13
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
@@ -167,7 +167,7 @@
 				"source": [
 					"df3.show()"
 				],
-				"execution_count": 14
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",

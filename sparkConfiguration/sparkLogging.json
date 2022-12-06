@@ -7,9 +7,9 @@
 			"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
 			"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key",
 			"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv",
-			"spark.synapse.logAnalytics.filter.loggerName.match": "com.datakickstart.datakickstart_synapse,datakickstart,com.datakickstart.synapse,org.apache.spark,com.microsoft.azure.*"
+			"spark.synapse.logAnalytics.filter.loggerName.match": "com.datakickstart.datakickstart_synapse,com.datakickstart.synapse,metrics,org.apache.spark.*,com.microsoft.azure.synapse.*.*"
 		},
-		"created": "2022-12-05T14:47:29.0540000-08:00",
+		"created": "2022-12-05T20:18:36.3270000-08:00",
 		"createdBy": "training@dustinvannoy.com",
 		"annotations": [],
 		"configMergeRule": {
