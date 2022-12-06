@@ -1,5 +1,5 @@
 {
-	"name": "Pipeline 1",
+	"name": "Pipeline_with_Logging",
 	"properties": {
 		"activities": [
 			{
@@ -64,7 +64,7 @@
 						{
 							"type": "Query",
 							"text": {
-								"value": "\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts\nGO",
+								"value": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[fact_stackoverflow_post]') AND type in (N'U'))\nDROP EXTERNAL TABLE demo.dbo.fact_stackoverflow_post;\n\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts;",
 								"type": "Expression"
 							}
 						}
