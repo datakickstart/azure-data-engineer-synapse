@@ -107,7 +107,10 @@
 					"scripts": [
 						{
 							"type": "Query",
-							"text": "CREATE EXTERNAL TABLE refined.fact_stackoverflow_post AS\nselect * from raw_stackoverflow.posts"
+							"text": {
+								"value": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[fact_stackoverflow_post]') AND type in (N'U'))\nDROP EXTERNAL TABLE demo.dbo.fact_stackoverflow_post;\n\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts;",
+								"type": "Expression"
+							}
 						}
 					],
 					"logSettings": {
