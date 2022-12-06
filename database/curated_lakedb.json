@@ -1,0 +1,22 @@
+{
+	"name": "curated_lakedb",
+	"properties": {
+		"Name": "curated_lakedb",
+		"EntityType": "DATABASE",
+		"Origin": {
+			"Type": "SPARK"
+		},
+		"Properties": {
+			"IsSyMSCDMDatabase": true
+		},
+		"Source": {
+			"Provider": "ADLS",
+			"Location": "abfss://curated@datakickstartadls.dfs.core.windows.net/curated_lakedb",
+			"Properties": {
+				"FormatType": "parquet",
+				"LinkedServiceName": "datakickstart-synapse-WorkspaceDefaultStorage"
+			}
+		}
+	},
+	"type": "DATABASE"
+}
