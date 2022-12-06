@@ -119,7 +119,7 @@
 						"Log-Type": "DataKickstartPipeline"
 					},
 					"body": {
-						"value": "{\n\"TimeGeneratedPipeline\": @{pipeline().TriggerTime}\n\"notebook\": \"log_analytics_restapi\",\n  \"platform\": \"Synapse Pipelines\",\n  \"version\": 1.0\n}",
+						"value": "{\n\"TimeGeneratedPipeline\": @{pipeline().TriggerTime}\n\"message\": \"Script completed successfully.\"\n\"notebook\": \"stackoverflow_fact_create\",\n  \"platform\": \"Synapse Pipelines\",\n  \"version\": 1.0\n}",
 						"type": "Expression"
 					}
 				}
