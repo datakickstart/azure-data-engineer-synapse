@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "6fe629e6-eaf9-435b-9bd3-840775a29002"
+				"spark.autotune.trackingId": "936e8700-47e8-4222-8c67-bded55a7a49b"
 			}
 		},
 		"metadata": {
@@ -63,7 +63,7 @@
 				"source": [
 					"%%sql\r\n",
 					"Select\r\n",
-					"    posts.PostTypeId\r\n",
+					"    posts._PostTypeId\r\n",
 					"    ,users._Reputation\r\n",
 					"    ,min(CreationDate) FirstCreationDate\r\n",
 					"    ,max(LastActivityDate) LastActivityDate\r\n",
@@ -78,7 +78,7 @@
 					"FROM raw_stackoverflow.posts\r\n",
 					"  JOIN raw_stackoverflow.users\r\n",
 					"    ON posts._OwnerUserId = users._Id\r\n",
-					"GROUP BY PostTypeId, _Reputation"
+					"GROUP BY _PostTypeId, _Reputation"
 				],
 				"execution_count": 6
 			},
@@ -101,23 +101,37 @@
 				},
 				"source": [
 					"%%sql\r\n",
+					"WITH post_comments (\r\n",
+					"  Select \r\n",
+					"    _PostId,\r\n",
+					"    count(1) CommentsCount,\r\n",
+					"    avg(_Score) AvgCommentScore\r\n",
+					"  From raw_stackoverflow.comments\r\n",
+					"  group by _PostId\r\n",
+					")\r\n",
 					"Select\r\n",
-					"    posts.PostTypeId\r\n",
-					"    ,posts.Tags\r\n",
-					"    ,min(CreationDate) FirstCreationDate\r\n",
-					"    ,max(LastActivityDate) LastActivityDate\r\n",
-					"    ,max(ClosedDate) LastClosedDate\r\n",
-					"    ,count(ClosedDate) ClosedCount\r\n",
-					"    ,sum(FavoriteCount) FavoriteCount\r\n",
-					"    ,sum(CommentCount) CommentCount\r\n",
-					"    ,sum(AnswerCount) AnswerCount\r\n",
-					"    ,sum(Score) ScoreTotal\r\n",
-					"    ,sum(ViewCount) ViewCount\r\n",
+					"    posts._PostTypeId\r\n",
+					"    ,users._Reputation\r\n",
+					"    ,min(posts._CreationDate) FirstCreationDate\r\n",
+					"    ,max(_LastActivityDate) LastActivityDate\r\n",
+					"    ,max(_ClosedDate) LastClosedDate\r\n",
+					"    ,count(_ClosedDate) ClosedCount\r\n",
+					"    ,sum(_FavoriteCount) FavoriteCount\r\n",
+					"    ,sum(_CommentCount) CommentCount\r\n",
+					"    ,sum(_AnswerCount) AnswerCount\r\n",
+					"    ,sum(_Score) ScoreTotal\r\n",
+					"    ,sum(_ViewCount) ViewCount\r\n",
 					"    ,count(1) Posts\r\n",
+					"    ,sum(CommentsCount) CommentsCount\r\n",
+					"    ,max(AvgCommentScore) AvgCommentScore\r\n",
 					"FROM raw_stackoverflow.posts\r\n",
-					"GROUP BY PostTypeId, Tags"
+					"  JOIN raw_stackoverflow.users\r\n",
+					"    ON posts._OwnerUserId = users._Id\r\n",
+					"  JOIN post_comments\r\n",
+					"    ON posts._Id = post_comments._PostId\r\n",
+					"GROUP BY _PostTypeId, users._Reputation"
 				],
-				"execution_count": null
+				"execution_count": 6
 			}
 		]
 	}
