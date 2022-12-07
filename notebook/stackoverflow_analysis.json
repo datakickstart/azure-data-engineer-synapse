@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "af7f4f87-2c80-4306-aef4-463efc86dd47"
+				"spark.autotune.trackingId": "924fda26-32ea-46a2-bbf8-1731e01207e7"
 			}
 		},
 		"metadata": {
@@ -52,36 +52,6 @@
 			"sessionKeepAliveTimeout": 10
 		},
 		"cells": [
-			{
-				"cell_type": "code",
-				"metadata": {
-					"microsoft": {
-						"language": "sparksql"
-					},
-					"collapsed": false
-				},
-				"source": [
-					"%%sql\r\n",
-					"Select\r\n",
-					"    posts._PostTypeId\r\n",
-					"    ,users._Reputation\r\n",
-					"    ,min(CreationDate) FirstCreationDate\r\n",
-					"    ,max(LastActivityDate) LastActivityDate\r\n",
-					"    ,max(ClosedDate) LastClosedDate\r\n",
-					"    ,count(ClosedDate) ClosedCount\r\n",
-					"    ,sum(FavoriteCount) FavoriteCount\r\n",
-					"    ,sum(CommentCount) CommentCount\r\n",
-					"    ,sum(AnswerCount) AnswerCount\r\n",
-					"    ,sum(Score) ScoreTotal\r\n",
-					"    ,sum(ViewCount) ViewCount\r\n",
-					"    ,count(1) Posts\r\n",
-					"FROM raw_stackoverflow.posts\r\n",
-					"  JOIN raw_stackoverflow.users\r\n",
-					"    ON posts._OwnerUserId = users._Id\r\n",
-					"GROUP BY _PostTypeId, _Reputation"
-				],
-				"execution_count": 6
-			},
 			{
 				"cell_type": "code",
 				"metadata": {
@@ -131,7 +101,7 @@
 					"    ON posts._Id = post_comments._PostId\r\n",
 					"GROUP BY _PostTypeId, users._Reputation"
 				],
-				"execution_count": 6
+				"execution_count": null
 			}
 		]
 	}
