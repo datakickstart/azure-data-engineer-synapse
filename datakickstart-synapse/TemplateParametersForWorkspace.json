@@ -9,7 +9,7 @@
 			"value": ""
 		},
 		"AzureSqlStackoverflow_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sandbox-2-sqlserver.database.windows.net;Initial Catalog=@{linkedService().database_name};User ID=dv_admin"
 		},
 		"Snowflake1_connectionString": {
 			"value": ""
@@ -18,13 +18,13 @@
 			"value": ""
 		},
 		"StackOverflow2_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sandbox-2-sqlserver.database.windows.net;Initial Catalog=@{linkedService().source_database};User ID=dv_admin"
 		},
 		"StackOverflowTest2_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sandbox-2-sqlserver.database.windows.net;Initial Catalog=@{linkedService().database_name};User ID=dv_admin"
 		},
 		"datakickstart-synapse-WorkspaceDefaultSqlServer_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:datakickstart-synapse.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
 		"datakickstart_databricks_ls_accessToken": {
 			"value": ""
@@ -36,7 +36,7 @@
 			"value": ""
 		},
 		"synapse_serverless_datakickstart_ls_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=datakickstart-synapse-ondemand.sql.azuresynapse.net;Initial Catalog=demo"
 		},
 		"LogOutput_datakickstartadls_properties_typeProperties_serviceEndpoint": {
 			"value": "https://datakickstartadls.blob.core.windows.net/"
