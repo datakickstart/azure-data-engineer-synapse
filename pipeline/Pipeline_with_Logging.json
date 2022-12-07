@@ -118,7 +118,7 @@
 						},
 						"Log-Type": "DataKickstartPipeline",
 						"x-ms-date": {
-							"value": "@{formatDateTime(utcnow(), 'EEE, dd MMM yyyy HH:mm:ss GMT')}",
+							"value": "@{formatDateTime(utcnow(), 'ddd, dd MMM yyyy hh:mm:ss GMT')}",
 							"type": "Expression"
 						}
 					},
