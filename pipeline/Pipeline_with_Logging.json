@@ -118,12 +118,12 @@
 						},
 						"Log-Type": "DataKickstartPipeline",
 						"x-ms-date": {
-							"value": "@{formatDateTime(utcnow(), 'ddd, dd MMM yyyy hh:mm:ss GMT')}",
+							"value": "@{formatDateTime(utcnow(), 'ddd, dd MMM yyyy HH:mm:ss G\\MT')}",
 							"type": "Expression"
 						}
 					},
 					"body": {
-						"value": "{\n\"TimeGeneratedPipeline\": @{pipeline().TriggerTime}\n\"message\": \"Script completed successfully.\"\n\"notebook\": \"stackoverflow_fact_create\",\n  \"platform\": \"Synapse Pipelines\",\n  \"version\": 1.0\n}",
+						"value": "[{\"TimeGeneratedPipeline\": \"2022-12-07 17:10:01\", \"message\": \"Script completed successfully.\", \"notebook\": \"stackoverflow_fact_create\", \"platform\": \"Synapse Pipelines\", \"version\": 1.0}]",
 						"type": "Expression"
 					}
 				}
