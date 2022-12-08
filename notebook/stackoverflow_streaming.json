@@ -25,7 +25,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "f7063652-b3e9-4e67-abeb-f0a5ae761523"
+				"spark.autotune.trackingId": "6ec1a5a8-87eb-46b5-923f-7b7e9a2e2ef8"
 			}
 		},
 		"metadata": {
@@ -45,14 +45,13 @@
 				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
 				"auth": {
 					"type": "AAD",
-					"authResource": "https://dev.azuresynapse.net",
-					"authHeader": null
+					"authResource": "https://dev.azuresynapse.net"
 				},
 				"sparkVersion": "3.2",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
-				"extraHeader": null
+				"automaticScaleJobs": false
 			},
 			"sessionKeepAliveTimeout": 10,
 			"targetSparkConfiguration": "sparkConfigurationSmall"
@@ -84,7 +83,7 @@
 					"ckpt_path = f\"{raw_base_path}checkpoints/stackoverflow_streaming_{GROUP_ID}\"\r\n",
 					"dest_path = f\"{raw_base_path}stack_overflow_streaming/posts_{GROUP_ID}\""
 				],
-				"execution_count": 5
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -102,7 +101,7 @@
 				"source": [
 					"%run utils/logging_utils"
 				],
-				"execution_count": 6
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -124,7 +123,7 @@
 					"source_table_name = \"stackoverflow_kafka_stream\"\r\n",
 					"start_logging(job_name, destination_database_name, destination_table_name, source_table_name)"
 				],
-				"execution_count": 7
+				"execution_count": 3
 			},
 			{
 				"cell_type": "code",
@@ -166,7 +165,7 @@
 					"    .add('_FavoriteCount','long')\r\n",
 					")"
 				],
-				"execution_count": 8
+				"execution_count": 4
 			},
 			{
 				"cell_type": "code",
@@ -198,7 +197,7 @@
 					"\r\n",
 					"post_df = post_cast_df.selectExpr(\"json.*\")"
 				],
-				"execution_count": 9
+				"execution_count": 5
 			},
 			{
 				"cell_type": "code",
@@ -230,7 +229,7 @@
 					"\r\n",
 					"all_users = old_users.union(new_users)"
 				],
-				"execution_count": 10
+				"execution_count": 6
 			},
 			{
 				"cell_type": "code",
@@ -256,7 +255,7 @@
 					"q.processAllAvailable()\r\n",
 					"q.stop()"
 				],
-				"execution_count": 11
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -276,7 +275,7 @@
 					"test_df = spark.read.format(\"delta\").load(dest_path)\r\n",
 					"display(test_df)"
 				],
-				"execution_count": 12
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
@@ -293,7 +292,8 @@
 				},
 				"source": [
 					"stop_logging(job_name)"
-				]
+				],
+				"execution_count": null
 			}
 		]
 	}
