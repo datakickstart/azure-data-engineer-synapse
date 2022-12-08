@@ -1,0 +1,204 @@
+{
+	"name": "stackoverflow_curated",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo2022",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "ead1c389-b747-46c3-90b3-d6ead39e4ed0"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo2022",
+				"name": "demo2022",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo2022",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"## StackOverflow curated example\r\n",
+					"This notebook will create a curated table in our replicated lake database.\r\n",
+					"\r\n",
+					"Steps:\r\n",
+					"1. Query refined using Spark sql.\r\n",
+					"2. Replace data in destination table"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import current_timestamp\r\n",
+					"\r\n",
+					"source_base_path = \"abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"raw_base_path = \"abfss://raw@datakickstartadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"refined_base_path = \"abfss://refined@datakickstartadls.dfs.core.windows.net/\""
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"job_name = \"stackoverflow_curated\"\r\n",
+					"destination_database_name = \"curated\"\r\n",
+					"destination_table_name = \"dim_user\"\r\n",
+					"source_table_name = \"stackoverflow_refined\"\r\n",
+					"start_logging(job_name, destination_database_name, destination_table_name, source_table_name)"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df = spark.sql(\"\"\"\r\n",
+					"select\r\n",
+					"  _Id as id,\r\n",
+					"  ifnull(_AccountId,0) as account_id,\r\n",
+					"  _DisplayName as display_name,\r\n",
+					"  _Location as location,\r\n",
+					"  _WebsiteUrl as website_url,\r\n",
+					"  _CreationDate as creation_date,\r\n",
+					"  _LastAccessDate as last_access_date\r\n",
+					"from refined.users\r\n",
+					"where _LastAccessDate >= '2021-01-01 00:00:00'\r\n",
+					"\"\"\").cache()\r\n",
+					"\r\n",
+					"print(df.count())"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df.write.mode(\"overwrite\").format(\"parquet\").saveAsTable(\"curated_lakedb.stackoverflow_user\")"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": 10
+			}
+		]
+	}
+}
