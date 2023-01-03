@@ -1,0 +1,248 @@
+{
+	"name": "stackoverflow_refined",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "1533b3bd-5a2e-4782-bfee-377bc2204394"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import lit, col\r\n",
+					"from datetime import datetime\r\n",
+					"\r\n",
+					"load_time = datetime.now()\r\n",
+					"raw_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"raw-datalake-path\") + \"stackoverflow\"\r\n",
+					"refined_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"refined-datalake-path\") + \"stackoverflow\"\r\n",
+					"raw_format = \"delta\"\r\n",
+					"refined_format = \"delta\"\r\n",
+					"job_name = \"stackoverflow_refined\"\r\n",
+					"\r\n",
+					"# logger = start_logging(spark, job_name)"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def create_database(db_name, path, drop=False):\r\n",
+					"    if drop:\r\n",
+					"        spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
+					"    spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}'\")"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Load refined tables concurrently"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"def load_table(args):\r\n",
+					"    status = \"test\"\r\n",
+					"    # status = dbutils.notebook.run(\"stackoverflow_refined_table_load\", 1800, arguments=args)\r\n",
+					"    print(status)\r\n",
+					"    if status != 'success':\r\n",
+					"        raise Exception(f\"Failed to load refined database. Status: {str(status)}\")"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from threading import Thread\r\n",
+					"from queue import Queue\r\n",
+					"\r\n",
+					"q = Queue()\r\n",
+					"worker_count = 3\r\n",
+					"errors = {}\r\n",
+					"\r\n",
+					"def run_tasks(function, q):\r\n",
+					"    while not q.empty():\r\n",
+					"        try:\r\n",
+					"            value = q.get()\r\n",
+					"            function(value)\r\n",
+					"        except Exception as e:\r\n",
+					"            table = value.get(\"table\", \"UNKNOWN TABLE\")\r\n",
+					"            msg = f\"Error processing table {table}: {str(e)}\"\r\n",
+					"            errors[value] = e\r\n",
+					"            log_error_message(msg)\r\n",
+					"        finally:\r\n",
+					"            q.task_done()\r\n",
+					"\r\n",
+					"\r\n",
+					"table_list = [\r\n",
+					"    {\"table\": \"badges_delta\", \"id_column\": \"id\", \r\n",
+					"     \"columns\": \"_Class as class,_Date as event_date,_Id as id,_Name as name,_UserId as userid\"\r\n",
+					"    },\r\n",
+					"    {\"table\": \"comments_delta\", \"id_column\": \"id\", \r\n",
+					"     \"columns\": \"_ContentLicense as content_license,_CreationDate as creation_date,_Id as id,_PostId as post_id,_Score as score,_Text as text,_UserDisplayName as user_display_name,_UserId as user_id\"\r\n",
+					"    }\r\n",
+					"]\r\n",
+					"\r\n",
+					"print(table_list)\r\n",
+					"\r\n",
+					"for table_args in table_list:\r\n",
+					"    q.put(table_args)\r\n",
+					"\r\n",
+					"for i in range(worker_count):\r\n",
+					"    t=Thread(target=run_tasks, args=(load_table, q))\r\n",
+					"    t.daemon = True\r\n",
+					"    t.start()\r\n",
+					"\r\n",
+					"q.join()\r\n",
+					"\r\n",
+					"if len(errors) == 0:\r\n",
+					"    log_informational_message(\"All tasks completed successfully.\")\r\n",
+					"elif len(errors) > 0:\r\n",
+					"    msg = f\"Errors during tasks {list(errors.keys())} -> \\n {str(errors)}\"\r\n",
+					"    raise Exception(msg)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": 8
+			}
+		]
+	}
+}
