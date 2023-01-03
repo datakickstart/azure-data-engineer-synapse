@@ -1,0 +1,319 @@
+{
+	"name": "stackoverflow_refined_table_load",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "61297b23-dde7-454a-b117-5daecf68aa6a"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": true,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"table = \"area\"\r\n",
+					"id_column = \"area_code\"\r\n",
+					"columns = \"area_code,area_name,display_level\""
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import lit, col\r\n",
+					"from pyspark.sql.utils import AnalysisException\r\n",
+					"from datetime import datetime\r\n",
+					"\r\n",
+					"load_time = datetime.now()\r\n",
+					"raw_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"raw-datalake-path\") + \"stackoverflow\"\r\n",
+					"refined_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"refined-datalake-path\") + \"stackoverflow\"\r\n",
+					"raw_format = \"delta\"\r\n",
+					"refined_format = \"delta\"\r\n",
+					""
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"SET spark.databricks.delta.properties.defaults.enableChangeDataFeed = true"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\r\n",
+					"# #Area table - SETUP\r\n",
+					"# area_raw_df = spark.read.format(raw_format).load(raw_base_path + \"/area_original\")\r\n",
+					"# area_refined = area_raw_df.select(\"area_code\", \"area_name\", \"display_level\").withColumn(\"is_deleted\", lit(False))\r\n",
+					"# area_refined.write.format(refined_format).mode(\"overwrite\").option(\"enableChangeDataFeed\",\"true\").save(refined_base_path + \"/area\")"
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Prep source and target tables"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from delta.tables import *\r\n",
+					"\r\n",
+					"columns = columns.split(',')\r\n",
+					"print(columns)\r\n",
+					"\r\n",
+					"raw_df = spark.read.format(raw_format).load(f\"{raw_base_path}/{table}\")\r\n",
+					"df_source = raw_df.selectExpr(*columns).withColumn(\"is_deleted\", lit(False))\r\n",
+					"\r\n",
+					"try:\r\n",
+					"    delta_target = DeltaTable.forPath(spark, f\"{refined_base_path}/{table}\")\r\n",
+					"    df_target = delta_target.toDF()\r\n",
+					"except AnalysisException as e:\r\n",
+					"    if str(e).find(f\"Path does not exist\") > -1 or str(e).find(f\"is not a Delta table\") > -1:\r\n",
+					"        print(f\"Delta table {table} doesn't exist yet, creating table and exiting notebook early.\")\r\n",
+					"        df_source.write.format(\"delta\").save(f\"{refined_base_path}/{table}\")\r\n",
+					"        dbutils.notebook.exit(\"success\")\r\n",
+					"\r\n",
+					"# display(df_source)"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Delete if not in source"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"t = df_target.filter(\"is_deleted == False\")\r\n",
+					"df_source_ids = df_source.select(id)\r\n",
+					"df_deleted = t.join(df_source_ids, t[id] == df_source_ids[id], \"left_anti\").withColumn(\"is_deleted\", lit(True))\r\n",
+					"display(df_deleted)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Upsert if any column changed"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Upsert to delta target table\r\n",
+					"update_dct = {f\"{c}\": f\"s.{c}\" for c in df_target.columns if c != id}\r\n",
+					"condition_str = ' or '.join(f\"t.{k} != {v}\" for k,v in update_dct.items())\r\n",
+					"\r\n",
+					"df_source = df_source.union(df_deleted)\r\n",
+					"\r\n",
+					"print(condition_str)\r\n",
+					"\r\n",
+					"delta_target.alias('t') \\\r\n",
+					".merge(df_source.alias('s'), f\"t.{id} = s.{id}\") \\\r\n",
+					".whenMatchedUpdate(condition=f\"t.{id} = s.{id} and ({condition_str})\", set=update_dct) \\\r\n",
+					".whenNotMatchedInsertAll() \\\r\n",
+					".execute()"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"mssparkutils.notebook.exit(\"success\")"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}
