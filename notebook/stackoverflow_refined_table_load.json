@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "92731b0c-1b01-4909-b589-f64bf89617d4"
+				"spark.autotune.trackingId": "763c498f-1053-4b6a-ab65-451339e16d83"
 			}
 		},
 		"metadata": {
@@ -130,28 +130,6 @@
 					"SET spark.databricks.delta.properties.defaults.enableChangeDataFeed = true"
 				],
 				"execution_count": 46
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					"\r\n",
-					"# #Area table - SETUP\r\n",
-					"# area_raw_df = spark.read.format(raw_format).load(raw_base_path + \"/area_original\")\r\n",
-					"# area_refined = area_raw_df.select(\"area_code\", \"area_name\", \"display_level\").withColumn(\"is_deleted\", lit(False))\r\n",
-					"# area_refined.write.format(refined_format).mode(\"overwrite\").option(\"enableChangeDataFeed\",\"true\").save(refined_base_path + \"/area\")"
-				],
-				"execution_count": 47
 			},
 			{
 				"cell_type": "markdown",
