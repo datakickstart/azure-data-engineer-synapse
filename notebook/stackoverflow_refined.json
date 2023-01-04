@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "spark32",
+			"referenceName": "spark33",
 			"type": "BigDataPoolReference"
 		},
 		"sessionProperties": {
@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "1533b3bd-5a2e-4782-bfee-377bc2204394"
+				"spark.autotune.trackingId": "cf96ee4e-2828-4c76-9247-102c772e50c9"
 			}
 		},
 		"metadata": {
@@ -34,15 +34,15 @@
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
-				"name": "spark32",
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark33",
+				"name": "spark33",
 				"type": "Spark",
-				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark33",
 				"auth": {
 					"type": "AAD",
 					"authResource": "https://dev.azuresynapse.net"
 				},
-				"sparkVersion": "3.2",
+				"sparkVersion": "3.3",
 				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
@@ -67,7 +67,7 @@
 				"source": [
 					"%run utils/logging_utils"
 				],
-				"execution_count": 3
+				"execution_count": 1
 			},
 			{
 				"cell_type": "code",
@@ -78,13 +78,13 @@
 					"load_time = datetime.now()\r\n",
 					"raw_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"raw-datalake-path\") + \"stackoverflow\"\r\n",
 					"refined_base_path = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"refined-datalake-path\") + \"stackoverflow\"\r\n",
-					"raw_format = \"delta\"\r\n",
+					"raw_format = \"parquet\"\r\n",
 					"refined_format = \"delta\"\r\n",
 					"job_name = \"stackoverflow_refined\"\r\n",
 					"\r\n",
-					"# logger = start_logging(spark, job_name)"
+					"# logger = start_logging(job_name, destination_database_name, destination_table_name, source_table_name"
 				],
-				"execution_count": 4
+				"execution_count": 2
 			},
 			{
 				"cell_type": "code",
@@ -100,30 +100,12 @@
 					}
 				},
 				"source": [
-					"def create_database(db_name, path, drop=False):\r\n",
-					"    if drop:\r\n",
-					"        spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
-					"    spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}'\")"
+					"# def create_database(db_name, path, drop=False):\r\n",
+					"#     if drop:\r\n",
+					"#         spark.sql(f\"DROP DATABASE IF EXISTS {db_name} CASCADE;\")    \r\n",
+					"#     spark.sql(f\"CREATE DATABASE IF NOT EXISTS {db_name} LOCATION '{path}'\")"
 				],
-				"execution_count": 5
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
-					""
-				],
-				"execution_count": null
+				"execution_count": 3
 			},
 			{
 				"cell_type": "markdown",
@@ -153,13 +135,11 @@
 				},
 				"source": [
 					"def load_table(args):\r\n",
-					"    status = \"test\"\r\n",
-					"    # status = dbutils.notebook.run(\"stackoverflow_refined_table_load\", 1800, arguments=args)\r\n",
-					"    print(status)\r\n",
+					"    status = mssparkutils.notebook.run(\"stackoverflow_refined_table_load\", 1800, arguments=args)\r\n",
 					"    if status != 'success':\r\n",
 					"        raise Exception(f\"Failed to load refined database. Status: {str(status)}\")"
 				],
-				"execution_count": 6
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
@@ -197,10 +177,10 @@
 					"\r\n",
 					"\r\n",
 					"table_list = [\r\n",
-					"    {\"table\": \"badges_delta\", \"id_column\": \"id\", \r\n",
+					"    {\"table\": \"badges\", \"id\": \"id\", \r\n",
 					"     \"columns\": \"_Class as class,_Date as event_date,_Id as id,_Name as name,_UserId as userid\"\r\n",
 					"    },\r\n",
-					"    {\"table\": \"comments_delta\", \"id_column\": \"id\", \r\n",
+					"    {\"table\": \"comments\", \"id\": \"id\", \r\n",
 					"     \"columns\": \"_ContentLicense as content_license,_CreationDate as creation_date,_Id as id,_PostId as post_id,_Score as score,_Text as text,_UserDisplayName as user_display_name,_UserId as user_id\"\r\n",
 					"    }\r\n",
 					"]\r\n",
@@ -223,7 +203,7 @@
 					"    msg = f\"Errors during tasks {list(errors.keys())} -> \\n {str(errors)}\"\r\n",
 					"    raise Exception(msg)"
 				],
-				"execution_count": 7
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -241,7 +221,7 @@
 				"source": [
 					"stop_logging(job_name)"
 				],
-				"execution_count": 8
+				"execution_count": 6
 			}
 		]
 	}
