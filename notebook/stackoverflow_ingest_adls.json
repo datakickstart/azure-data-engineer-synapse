@@ -7,7 +7,7 @@
 		"nbformat": 4,
 		"nbformat_minor": 2,
 		"bigDataPool": {
-			"referenceName": "demo2022",
+			"referenceName": "spark33",
 			"type": "BigDataPoolReference"
 		},
 		"sessionProperties": {
@@ -21,7 +21,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "97f93f7d-7ac0-4010-9f45-b050893aa086"
+				"spark.autotune.trackingId": "c04fc7e6-00ae-4f9f-b192-174a1105fee3"
 			}
 		},
 		"metadata": {
@@ -35,16 +35,16 @@
 				"name": "python"
 			},
 			"a365ComputeOptions": {
-				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo2022",
-				"name": "demo2022",
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark33",
+				"name": "spark33",
 				"type": "Spark",
-				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo2022",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark33",
 				"auth": {
 					"type": "AAD",
 					"authResource": "https://dev.azuresynapse.net"
 				},
-				"sparkVersion": "3.2",
-				"nodeCount": 10,
+				"sparkVersion": "3.3",
+				"nodeCount": 3,
 				"cores": 4,
 				"memory": 28,
 				"automaticScaleJobs": false
@@ -285,11 +285,11 @@
 					}
 				},
 				"source": [
-					"for path, table in table_list:  \r\n",
-					"    df = spark.read.parquet(path)\r\n",
-					"    df = df.withColumn(\"refresh_date\", current_timestamp())\r\n",
-					"    save_table(df, \"refined.\" + table, format=\"delta\")\r\n",
-					"    log_informational_message(f\"Saved refined table {table}\")"
+					"# for path, table in table_list:  \r\n",
+					"#     df = spark.read.parquet(path)\r\n",
+					"#     df = df.withColumn(\"refresh_date\", current_timestamp())\r\n",
+					"#     save_table(df, \"refined.\" + table, format=\"delta\")\r\n",
+					"#     log_informational_message(f\"Saved refined table {table}\")"
 				],
 				"execution_count": 9
 			},
@@ -309,7 +309,7 @@
 				"source": [
 					"stop_logging(job_name)"
 				],
-				"execution_count": 10
+				"execution_count": null
 			}
 		]
 	}
