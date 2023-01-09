@@ -1,0 +1,160 @@
+{
+	"name": "data_lake_load",
+	"properties": {
+		"folder": {
+			"name": "Data Lake Demo"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo31",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 1,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "true",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "371f896b-dd93-4a98-8d13-a26e5d0782b2"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo31",
+				"name": "demo31",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo31",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": true
+			},
+			"sessionKeepAliveTimeout": 60
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"tags": [
+						"parameters"
+					]
+				},
+				"source": [
+					"location = 'dev'"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import col, desc, regexp_replace, substring, to_date, from_json, explode, expr\n",
+					"from pyspark.sql.types import StructType, StringType\n",
+					"\n",
+					"print(location)\n",
+					"\n",
+					"yellow_source_path = \"wasbs://nyctlc@azureopendatastorage.blob.core.windows.net/yellow/puYear=2018/puMonth=*/*.parquet\"\n",
+					"taxi_zone_source_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_zone_lookup.csv\"\n",
+					"\n",
+					"taxi_zone_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_zone\"\n",
+					"taxi_rate_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/lookups/taxi_rate_code\"\n",
+					"yellow_delta_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/nyctaxi/tripdata/yellow_delta\"\n",
+					"\n",
+					"date_format = \"yyyy-MM-dd HH:mm:ss\"\n",
+					"\n",
+					"# Define a schema that Spark understands. This is one of several ways to do it.\n",
+					"taxi_zone_schema = (\n",
+					"  StructType()\n",
+					"    .add('LocationID', 'integer')\n",
+					"    .add('Borough', 'string')\n",
+					"    .add('Zone', 'string')\n",
+					"    .add('ServiceZone', 'string')\n",
+					")"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"zone_df = (\n",
+					"  spark.read\n",
+					"    .option(\"header\",\"true\")\n",
+					"    .schema(taxi_zone_schema)\n",
+					"    .csv(taxi_zone_source_path) \n",
+					"  )\n",
+					"\n",
+					"zone_df.write.format(\"delta\").mode(\"overwrite\").save(taxi_zone_path)"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"input_df = spark.read.parquet(yellow_source_path)\n",
+					"\n",
+					"# Take your pick on how to transform, withColumn or SQL Expressions. Only one of these is needed.\n",
+					"\n",
+					"# Option A\n",
+					"# transformed_df = (\n",
+					"#   input_df\n",
+					"#     .withColumn(\"yearMonth\", regexp_replace(substring(\"tpepPickupDatetime\",1,7), '-', '_'))\n",
+					"#     .withColumn(\"pickupDt\", to_date(\"tpepPickupDatetime\", date_format)) \n",
+					"#     .withColumn(\"dropoffDt\", to_date(\"tpepDropoffDatetime\", date_format))\n",
+					"#     .withColumn(\"tipPct\", col(\"tipAmount\") / col(\"totalAmount\"))\n",
+					"# )\n",
+					"  \n",
+					"# Option B\n",
+					"transformed_df = input_df.selectExpr(\n",
+					"                  \"*\",\n",
+					"                  \"replace(left(tpepPickupDatetime, 7),'-','_') as yearMonth\",\n",
+					"                  f\"to_date(tpepPickupDatetime, '{date_format}') as pickupDt\",\n",
+					"                  f\"to_date(tpepDropoffDatetime, '{date_format}') as dropoffDt\",\n",
+					"                  f\"tipAmount/totalAmount as tipPct\")\n",
+					"\n",
+					"zone_df = spark.read.format(\"delta\").load(taxi_zone_path)\n",
+					"\n",
+					"# Join to bring in Taxi Zone data\n",
+					"trip_df = (\n",
+					"   transformed_df\n",
+					"     .join(zone_df, transformed_df[\"PULocationID\"] == zone_df[\"LocationID\"], how=\"left\").drop(\"LocationID\")\n",
+					"     .withColumnRenamed(\"Burough\", \"PickupBurrough\")\n",
+					"     .withColumnRenamed(\"Zone\", \"PickupZone\")\n",
+					"     .withColumnRenamed(\"ServiceZone\", \"PickupServiceZone\")\n",
+					")\n",
+					"\n",
+					"trip_df.write.mode(\"overwrite\").partitionBy(\"yearMonth\").format(\"delta\").save(yellow_delta_path)\n",
+					""
+				],
+				"execution_count": 3
+			}
+		]
+	}
+}

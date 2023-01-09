@@ -1,0 +1,156 @@
+{
+	"name": "produce_stackoverflow_event",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "b0728121-cb96-4541-aa89-99c18987fef7"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import col\r\n",
+					"\r\n",
+					"source_base_path = \"abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"raw_base_path = \"abfss://raw@datakickstartadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"refined_base_path = \"abfss://refined@datakickstartadls.dfs.core.windows.net/\"\r\n",
+					"\r\n",
+					"so_posts = spark.read.parquet(f\"{source_base_path}posts/CreationMonth=2022-06-01\")"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"so_posts = so_posts.sort(col(\"_CreationDate\").asc())\r\n",
+					"display(so_posts)"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"topic = \"stackoverflow_post\"\r\n",
+					"GROUP_ID = \"so_v1\"\r\n",
+					"\r\n",
+					"def get_confluent_config(topic):\r\n",
+					"    bootstrapServers = mssparkutils.credentials.getSecretWithLS('demokv', \"confluent-cloud-brokers\")\r\n",
+					"    confluentApiKey =  mssparkutils.credentials.getSecretWithLS('demokv', 'confluent-cloud-user')\r\n",
+					"    confluentSecret =  mssparkutils.credentials.getSecretWithLS('demokv', 'confluent-cloud-password')\r\n",
+					"    confluentTopicName = \"stackoverflow_post\"\r\n",
+					"\r\n",
+					"    options = {\r\n",
+					"        \"kafka.bootstrap.servers\": bootstrapServers,\r\n",
+					"        \"kafka.security.protocol\": \"SASL_SSL\",\r\n",
+					"        \"kafka.ssl.endpoint.identification.algorithm\": \"https\",\r\n",
+					"        \"kafka.sasl.jaas.config\": \"org.apache.kafka.common.security.plain.PlainLoginModule required username='{}' password='{}';\".format(confluentApiKey, confluentSecret),\r\n",
+					"        \"kafka.sasl.mechanism\": \"PLAIN\",\r\n",
+					"        \"topic\": confluentTopicName\r\n",
+					"    }\r\n",
+					"\r\n",
+					"    return options"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"topic = 'stackoverflow-post'\r\n",
+					"config = get_confluent_config(topic)\r\n",
+					"\r\n",
+					"min_dt = None\r\n",
+					"\r\n",
+					"for i in range(20):\r\n",
+					"    if min_dt:\r\n",
+					"        df = so_posts.where(col(\"_CreationDate\")< min_dt).limit(10)\r\n",
+					"    else:\r\n",
+					"        df = so_posts.limit(10)\r\n",
+					"    min_dt = df.selectExpr(\"min(_CreationDate) as minCreationDate\").first().minCreationDate\r\n",
+					"    df.selectExpr(\"cast(_Id as String) as key\", \"to_json(struct(*)) as value\").write.format(\"kafka\").options(**config).save()\r\n",
+					""
+				],
+				"execution_count": 4
+			}
+		]
+	}
+}

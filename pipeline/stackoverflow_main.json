@@ -1,0 +1,133 @@
+{
+	"name": "stackoverflow_main",
+	"properties": {
+		"activities": [
+			{
+				"name": "StackOverflow_API_Ingest",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Repos/training@dustinvannoy.com/datakickstart-databricks-workspace/stackoverflow/stackoverflow_ingest_api"
+				},
+				"linkedServiceName": {
+					"referenceName": "datakickstart_databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "StackOverflow_File_Ingest",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "stackoverflow_ingest_adls",
+						"type": "NotebookReference"
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "sparkLogging",
+						"type": "BigDataPoolReference"
+					},
+					"executorSize": null,
+					"conf": {
+						"spark.dynamicAllocation.enabled": null,
+						"spark.dynamicAllocation.minExecutors": null,
+						"spark.dynamicAllocation.maxExecutors": null
+					},
+					"driverSize": null,
+					"numExecutors": null
+				}
+			},
+			{
+				"name": "StackOverflowCopyTask_g91_TopLevel",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "StackOverflow_API_Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "StackOverflow_File_Ingest",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "StackOverflowCopyTask_g91_TopLevel",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "Refined_table_create",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "StackOverflowCopyTask_g91_TopLevel",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "synapse_serverless_datakickstart_ls",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[fact_stackoverflow_post]') AND type in (N'U'))\nDROP EXTERNAL TABLE demo.dbo.fact_stackoverflow_post;\n\nCREATE EXTERNAL TABLE demo.dbo.fact_stackoverflow_post \nWITH (\n    LOCATION = 'stackoverflow/fact_stackoverflow_@{pipeline().TriggerTime}',  \n    DATA_SOURCE = refined_datakickstartadls,  \n    FILE_FORMAT = ParquetFormat  \n)\nAS\nselect * from raw_stackoverflow.dbo.posts;",
+								"type": "Expression"
+							}
+						}
+					],
+					"logSettings": {
+						"logDestination": "ExternalStore",
+						"logLocationSettings": {
+							"linkedServiceName": {
+								"referenceName": "LogOutput_datakickstartadls",
+								"type": "LinkedServiceReference"
+							},
+							"path": "demo/synapse_logs"
+						}
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-08-23T04:35:54Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

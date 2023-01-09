@@ -1,0 +1,305 @@
+{
+	"name": "stackoverflow_ingest_api",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"targetSparkConfiguration": {
+			"referenceName": "sparkConfigurationSmall",
+			"type": "SparkConfigurationReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "12dd8ab1-abec-4e1f-bfce-e0a78fb1689d"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 10,
+			"targetSparkConfiguration": "sparkConfigurationSmall"
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "7f90409f-a685-48d8-9fb5-2b6838a2e7d4"
+					}
+				},
+				"source": [
+					"import json\n",
+					"import sys\n",
+					"import time\n",
+					"import requests\n",
+					"\n",
+					"source_base_path = \"abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/\"\n",
+					"raw_base_path = \"abfss://raw@datakickstartadls.dfs.core.windows.net/stackoverflow/\"\n",
+					"refined_base_path = \"abfss://refined@datakickstartadls.dfs.core.windows.net/\""
+				],
+				"execution_count": 20
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 21
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"job_name = 'stackoverflow_ingest_api'\r\n",
+					"destination_database = 'raw_stackoverflow'\r\n",
+					"start_logging(job_name, destination_database, \"questions_with_user\", \"stackoverflow_api\")\r\n",
+					"\r\n",
+					"base_url = \"https://api.stackexchange.com/2.2\"\r\n",
+					"question_endpoint = base_url + \"/questions\"\r\n",
+					"users_endpoint = base_url + \"/users\""
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "823a1bee-4de9-4dfc-a979-48e498666f23"
+					}
+				},
+				"source": [
+					"def get_questions(endpoint, fromdate, todate):\n",
+					"    tags = \"pyspark\" # post must match all tags, consider separate calls for each of these: pyspark; apache-spark-sql; apache-spark\n",
+					"    query_string = f\"?fromdate={str(fromdate)}&todate={str(todate)}&order=desc&min=1&sort=votes&tagged={tags}&filter=default&site=stackoverflow&run=true\" #tagged=python&site=stackoverflow\"\n",
+					"    r = requests.get(f\"{endpoint}{query_string}\")\n",
+					"    if r.status_code == 200:\n",
+					"        return r.text\n",
+					"    else:\n",
+					"        return r\n",
+					"    \n",
+					"def get_users(endpoint, id_list):\n",
+					"    ids_string = ';'.join(list(id_list))\n",
+					"    logger.debug(\"User ids:\" + ids_string)\n",
+					"    ids = \"/\" + ids_string\n",
+					"    query_string = \"?site=stackoverflow\"\n",
+					"    r = requests.get(f\"{endpoint}{ids}{query_string}\")\n",
+					"    if r.status_code == 200:\n",
+					"        return r.text\n",
+					"    else:\n",
+					"        return r"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "cd7f7999-ad3b-4e68-8b0e-6f2a154ce41e"
+					}
+				},
+				"source": [
+					"# Get Questions\n",
+					"todate = int(time.time()) # - 18000  # test value: \"1619178204\"\n",
+					"fromdate = todate - 300000 #100000  # test value: \"1617108204\"\n",
+					"\n",
+					"response = get_questions(question_endpoint, fromdate, todate)\n",
+					"response_json = json.loads(response)\n",
+					"question_list = response_json[\"items\"]\n",
+					"\n",
+					"# Remove items and print response metadata\n",
+					"del response_json[\"items\"]\n",
+					"metadata = response_json\n",
+					"logger.info(f\"API metadata: {metadata}\")"
+				],
+				"execution_count": 24
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "f4aa906f-e98d-48dc-9f2f-2ec080819fe3"
+					}
+				},
+				"source": [
+					"print(\"Question count:\", len(question_list))\n",
+					"print(question_list[0])"
+				],
+				"execution_count": 25
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "fbd4a304-a1bc-47ba-b167-50dedfcedb53"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"question_df = spark.createDataFrame(question_list)\n",
+					"display(question_df)"
+				],
+				"execution_count": 26
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "f66909b3-38b0-45af-98bd-e75594eabb24"
+					}
+				},
+				"source": [
+					"# Build unique set of users\n",
+					"question_rows = question_df.collect()\n",
+					"user_ids = set()\n",
+					"for row in question_rows:\n",
+					"    user_ids.add(str(row['owner']['user_id']))\n",
+					"\n",
+					"print(user_ids)"
+				],
+				"execution_count": 27
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "72b5c1e8-6559-48a2-9958-a54aa49c98f5"
+					}
+				},
+				"source": [
+					"# Get Users\n",
+					"users_response = get_users(users_endpoint, user_ids)\n",
+					"users_json = json.loads(users_response)\n",
+					"users_list = users_json[\"items\"]\n",
+					"\n",
+					"print(users_list[0])"
+				],
+				"execution_count": 28
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "4fd26baf-95dc-4961-b8d9-4aa15a033565"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"# Create Users DataFrame\n",
+					"user_df = spark.createDataFrame(users_list).withColumnRenamed(\"creation_date\", \"user_creation_date\").withColumnRenamed(\"link\", \"user_link\")\n",
+					"user_df.write.mode(\"append\").format(\"delta\").option(\"mergeSchema\", \"true\").save(f\"{refined_base_path}stackoverflow_new_users\")\n",
+					"display(user_df)"
+				],
+				"execution_count": 31
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "16e75e73-0550-46e5-b0c4-fc0c36e7daf2"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"#Join\n",
+					"combined_df = question_df.join(user_df, question_df[\"owner.user_id\"] == user_df[\"user_id\"], how=\"left\")\n",
+					"combined_df.write.mode(\"append\").format(\"delta\").option(\"mergeSchema\", \"true\").save(f\"{refined_base_path}questions_with_user\")\n",
+					"display(combined_df)"
+				],
+				"execution_count": 32
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"application/vnd.databricks.v1+cell": {
+						"title": "",
+						"showTitle": false,
+						"nuid": "acf5d186-eec2-47b5-9c60-8aae0c240591"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"test_df = spark.read.format(\"delta\").load(f\"{refined_base_path}questions_with_user\").limit(30)\n",
+					"display(test_df)"
+				],
+				"execution_count": 37
+			}
+		]
+	}
+}

@@ -1,0 +1,176 @@
+{
+	"name": "python_custom",
+	"properties": {
+		"folder": {
+			"name": "Demo Miscellaneous"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "demo2022",
+			"type": "BigDataPoolReference"
+		},
+		"targetSparkConfiguration": {
+			"referenceName": "sparkLogging",
+			"type": "SparkConfigurationReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "41cf2d47-d4d3-4097-a717-de8efcd30d79"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/demo2022",
+				"name": "demo2022",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/demo2022",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 30,
+			"targetSparkConfiguration": "sparkLogging"
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.utils import AnalysisException\r\n",
+					"\r\n",
+					"def dataframe_summary(df, value_col):\r\n",
+					"    try:\r\n",
+					"        summary = df.selectExpr(\r\n",
+					"            f\"count({value_col}) as row_count\",\r\n",
+					"            f\"min({value_col}) as min_value\",\r\n",
+					"            f\"max({value_col}) as max_value\")\r\n",
+					"        result = summary.first()\r\n",
+					"    except AnalysisException as err:\r\n",
+					"        if str(err).find(f\"cannot resolve '`{value_col}`' given input columns\") >= 0:\r\n",
+					"            raise KeyError(f\"Column {value_col} does not exist in the DataFrame.\")\r\n",
+					"        else:\r\n",
+					"            raise err\r\n",
+					"    return (result.row_count, result.min_value, result.max_value)"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"import pytest\r\n",
+					"import ipytest\r\n",
+					"\r\n",
+					"def sample_df(vals):\r\n",
+					"    col_names = [\"name\", \"val\"]\r\n",
+					"    data = [[\"test \" + str(v), v] for v in vals]\r\n",
+					"    df = spark.createDataFrame(data, col_names)\r\n",
+					"    return df\r\n",
+					"\r\n",
+					"@pytest.fixture(scope=\"session\")\r\n",
+					"def input_df():\r\n",
+					"    return sample_df([1, 2])\r\n",
+					"\r\n",
+					"def test_dataframe_summary_valid_column(input_df):\r\n",
+					"    # input_df = sample_df([1, 2])\r\n",
+					"    result = (2, 1, 2)\r\n",
+					"    print(input_df, result)\r\n",
+					"    assert result == dataframe_summary(input_df, \"val\")\r\n",
+					"\r\n",
+					"def test_dataframe_summary_invalid_column(input_df):\r\n",
+					"    # input_df = sample_df([1, 2])\r\n",
+					"    result = (2, 1, 2)\r\n",
+					"    print(input_df, result)\r\n",
+					"    with pytest.raises(KeyError):\r\n",
+					"        result == dataframe_summary(input_df, \"fake_col\")"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"ipytest.autoconfig()\r\n",
+					"\r\n",
+					"ipytest.run()"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from datakickstart_utils import pyspark_utils\r\n",
+					"logger = pyspark_utils.get_log4j_logger(sc)\r\n",
+					"logger.info(\"Test log message\")"
+				],
+				"execution_count": 3
+			}
+		]
+	}
+}

@@ -1,0 +1,185 @@
+{
+	"name": "Confluent_Synapse",
+	"properties": {
+		"folder": {
+			"name": "Streaming"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "kafkatest",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "6e4a4882-1698-4506-aec4-7ee5dcd7516e"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/kafkatest",
+				"name": "kafkatest",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/kafkatest",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"##Define Variables\r\n",
+					"\r\n",
+					"confluentBootstrapServers = \"pkc-57jzz.southcentralus.azure.confluent.cloud:9092\"\r\n",
+					"\r\n",
+					"confluentApiKey = \"57SIALDON7M7P3BM\"\r\n",
+					"\r\n",
+					"confluentSecret = \"meYS4nx3FtyZ2MHEb8vYE0QQxIjinhcROx+k7hBA38fEgwmTMqz3LtgeXenMtkTD\"\r\n",
+					"\r\n",
+					"confluentRegistryApiKey = \"K7ATMG3SO7XDORJB\"\r\n",
+					"\r\n",
+					"confluentRegistrySecret = \"mp/hWGvfrFI4lY1rKLzqqnbrbL1pIbf7sEbahShc8rQnV0qzaKY3NsIBb9NXu5SO\"\r\n",
+					"\r\n",
+					"confluentTopicName = \"product\"\r\n",
+					"\r\n",
+					"schemaRegistryUrl = \"https://psrc-pg3n2.westus2.azure.confluent.cloud\"\r\n",
+					"\r\n",
+					" \r\n",
+					"\r\n",
+					"##Define Schema Registry\r\n",
+					"\r\n",
+					"# from confluent_kafka.schema_registry import SchemaRegistryClient\r\n",
+					"\r\n",
+					"# schema_registry_conf = {\r\n",
+					"\r\n",
+					"#     'url': schemaRegistryUrl,\r\n",
+					"\r\n",
+					"#     'basic.auth.user.info': '{}:{}'.format(confluentRegistryApiKey, confluentRegistrySecret)}\r\n",
+					"\r\n",
+					"# schema_registry_client = SchemaRegistryClient(schema_registry_conf)\r\n",
+					"\r\n",
+					" \r\n",
+					"\r\n",
+					"##Import Library\r\n",
+					"\r\n",
+					"import pyspark.sql.functions as fn\r\n",
+					"\r\n",
+					"from pyspark.sql.avro.functions import from_avro\r\n",
+					"\r\n",
+					"from pyspark.sql.types import StringType\r\n",
+					"\r\n",
+					"binary_to_string = fn.udf(lambda x: str(int.from_bytes(x, byteorder='big')), StringType())\r\n",
+					"\r\n",
+					" \r\n",
+					"\r\n",
+					"##Create Spark Readstream\r\n",
+					"\r\n",
+					"# clickstreamTestDf = (\r\n",
+					"\r\n",
+					"#   spark\r\n",
+					"\r\n",
+					"#   .readStream\r\n",
+					"\r\n",
+					"#   .format(\"delta\")\r\n",
+					"\r\n",
+					"#   .load(\"abfss://demo@datakickstartadls.dfs.core.windows.net/confluent_test_source\")\r\n",
+					"# )\r\n",
+					"\r\n",
+					"clickstreamTestDf = (\r\n",
+					"\r\n",
+					"  spark\r\n",
+					"\r\n",
+					"  .readStream\r\n",
+					"\r\n",
+					"  .format(\"kafka\")\r\n",
+					"\r\n",
+					"  .option(\"kafka.bootstrap.servers\", confluentBootstrapServers)\r\n",
+					"\r\n",
+					"  .option(\"kafka.security.protocol\", \"SASL_SSL\")\r\n",
+					"\r\n",
+					"  .option(\"kafka.sasl.jaas.config\", \"kafkashaded.org.apache.kafka.common.security.plain.PlainLoginModule required username='{}' password='{}';\".format(confluentApiKey, confluentSecret))\r\n",
+					"\r\n",
+					"  .option(\"kafka.ssl.endpoint.identification.algorithm\", \"https\")\r\n",
+					"\r\n",
+					"  .option(\"kafka.sasl.mechanism\", \"PLAIN\")\r\n",
+					"\r\n",
+					"  .option(\"subscribe\", confluentTopicName)\r\n",
+					"\r\n",
+					"  .option(\"startingOffsets\", \"earliest\")\r\n",
+					"\r\n",
+					"  .option(\"failOnDataLoss\", \"false\")\r\n",
+					"\r\n",
+					"  .load()\r\n",
+					"\r\n",
+					"  .withColumn('key', fn.col(\"key\").cast(StringType()))\r\n",
+					"\r\n",
+					"  .withColumn('fixedValue', fn.expr(\"substring(value, 6, length(value)-5)\"))\r\n",
+					"\r\n",
+					"  .withColumn('valueSchemaId', binary_to_string(fn.expr(\"substring(value, 2, 4)\")))\r\n",
+					"\r\n",
+					"  .select('topic', 'partition', 'offset', 'timestamp', 'timestampType', 'key', 'valueSchemaId','fixedValue')\r\n",
+					"\r\n",
+					")\r\n",
+					"\r\n",
+					"#Data within the Spark stream can be displayed dynamically from within the notebook.\r\n",
+					"\r\n",
+					"##Display \r\n",
+					"\r\n",
+					"# display(clickstreamTestDf) \r\n",
+					"clickstreamTestDf.writeStream.option(\"checkpointLocation\", \"abfss://demo@datakickstartadls.dfs.core.windows.net/checkpoints/confluent1\").format(\"delta\").start(\"abfss://demo@datakickstartadls.dfs.core.windows.net/confluent_test\")\r\n",
+					"\r\n",
+					"print(\"Streaming query\")"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

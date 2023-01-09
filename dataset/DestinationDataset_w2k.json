@@ -1,0 +1,17 @@
+{
+	"name": "DestinationDataset_w2k",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "SnowflakeDemo_YellowTrips",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "SnowflakeTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "PUBLIC",
+			"table": "TRIPS_YELLOW_VARIANT"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

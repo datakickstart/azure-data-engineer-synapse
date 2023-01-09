@@ -1,0 +1,20 @@
+{
+	"name": "StackoverflowSql_Dynamic_xg8_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "StackoverflowSql_Dynamic_xg8_20220726"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "ControlStackoverflowTest1"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

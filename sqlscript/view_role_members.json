@@ -1,0 +1,17 @@
+{
+	"name": "view_role_members",
+	"properties": {
+		"content": {
+			"query": "Select top 100 *\nFROM\n\tsys.database_role_members rm\n    JOIN sys.database_principals AS r ON rm.[role_principal_id] = r.[principal_id]\n\tJOIN sys.database_principals AS m ON rm.[member_principal_id] = m.[principal_id]\n-- WHERE\n-- \tr.[type_desc] = 'DATABASE_ROLE';\n\nSelect top 100 *\nFROM\n\tsys.server_role_members rm\n    JOIN sys.server_principals AS r ON rm.[member_principal_id] = r.[principal_id]",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

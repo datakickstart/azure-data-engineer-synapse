@@ -1,0 +1,17 @@
+{
+	"name": "CU_ServerlessExternal_Raw",
+	"properties": {
+		"content": {
+			"query": "USE demo\nGO\n\nCREATE LOGIN [test@trainingdustinvannoy.onmicrosoft.com] FROM EXTERNAL PROVIDER;\nALTER SERVER ROLE sysadmin ADD MEMBER [test1];\n\n-- In your database\nCREATE USER test1 FROM LOGIN [test@trainingdustinvannoy.onmicrosoft.com];\nALTER ROLE db_datareader ADD member test1; \n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'raw_datakickstartadls') \n\tCREATE EXTERNAL DATA SOURCE [raw_datakickstartadls] \n\tWITH (\n\t\tLOCATION = 'abfss://raw@datakickstartadls.dfs.core.windows.net' \n\t)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'ParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT ParquetFormat WITH (  FORMAT_TYPE = PARQUET );\nGO\nIF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'DeltaFormat') \n\tCREATE EXTERNAL FILE FORMAT DeltaLakeFormat WITH (  FORMAT_TYPE = DELTA );\nGO\n\nDROP EXTERNAL TABLE area_raw;\n\nCREATE EXTERNAL TABLE area_raw (\n\t[area_code] nvarchar(4000),\n\t[area_name] nvarchar(4000),\n\t[display_level] bigint\n\t)\n\tWITH (\n\tLOCATION = 'cu/area/*.parquet',\n\tDATA_SOURCE = raw_datakickstartadls,\n\tFILE_FORMAT = ParquetFormat\n\t)\nGO\n\nDROP EXTERNAL TABLE current_raw;\n\nCREATE EXTERNAL TABLE current_raw (\n\t[series_id] nvarchar(4000),\n\t[year] bigint,\n\t[period] nvarchar(4000),\n\t[value] float\n\t)\n\tWITH (\n\tLOCATION = 'cu/current/**',\n\tDATA_SOURCE = raw_datakickstartadls,\n\tFILE_FORMAT = ParquetFormat\n\t)\nGO\n\n\nCREATE EXTERNAL TABLE series_raw \n\tWITH (\n\tLOCATION = 'cu/series/**',\n\tDATA_SOURCE = raw_datakickstartadls,\n\tFILE_FORMAT = ParquetFormat\n\t)\nGO\n\nSELECT TOP 100 * FROM dbo.area_raw\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "demo",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

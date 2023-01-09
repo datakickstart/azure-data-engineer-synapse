@@ -1,0 +1,37 @@
+{
+	"name": "StackOverflowCopyTask_g91_SourceDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "StackOverflowTest2",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"cw_schema": {
+				"type": "String"
+			},
+			"cw_table": {
+				"type": "String"
+			},
+			"cw_ls_database_name": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "StackOverflowCopyTask_g91_20220729"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": {
+				"value": "@dataset().cw_schema",
+				"type": "Expression"
+			},
+			"table": {
+				"value": "@dataset().cw_table",
+				"type": "Expression"
+			}
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

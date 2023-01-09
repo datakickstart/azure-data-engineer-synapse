@@ -1,0 +1,20 @@
+{
+	"name": "StackOverflowCopyTask_g91_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "StackOverflowCopyTask_g91_20220729"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MainControlTable_g91"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,28 @@
+{
+	"name": "StackOverflow2",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"parameters": {
+			"source_database": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"connectionString": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=sandbox-2-sqlserver.database.windows.net;Initial Catalog=@{linkedService().source_database};User ID=dv_admin",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "demokv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "dustin-demo-sqldb-password"
+			}
+		},
+		"connectVia": {
+			"referenceName": "AutoResolveIntegrationRuntime",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

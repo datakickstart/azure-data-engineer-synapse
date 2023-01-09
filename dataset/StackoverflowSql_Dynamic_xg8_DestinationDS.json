@@ -1,0 +1,48 @@
+{
+	"name": "StackoverflowSql_Dynamic_xg8_DestinationDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "datakickstartadls_ls",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"cw_fileName": {
+				"type": "String"
+			},
+			"cw_folderPath": {
+				"type": "String"
+			},
+			"cw_fileSystem": {
+				"type": "String"
+			}
+		},
+		"folder": {
+			"name": "StackoverflowSql_Dynamic_xg8_20220726"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().cw_fileName",
+					"type": "Expression"
+				},
+				"folderPath": {
+					"value": "@dataset().cw_folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().cw_fileSystem",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy",
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

@@ -1,0 +1,19 @@
+{
+	"name": "StackOverflow_MetadataDrivenCopyTask1_cc8_ControlDS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "StackOverflow_MetadataDrivenCopyTask1_cc8_20221208"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "MainControlTable_cc8"
+		}
+	}
+}

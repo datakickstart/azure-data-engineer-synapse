@@ -1,0 +1,17 @@
+{
+	"name": "Grant access to a user to a single serverless SQL pool database",
+	"properties": {
+		"content": {
+			"query": "--1.a Create LOGIN for an Azure AD account.To create a login, you must be connected to the master database.\n\nCREATE USER [alias@domain.com] FROM EXTERNAL PROVIDER;\n\n\n--1.b Create a Login for a SQL authuser. To create a login, you must be connected to the master database.\nCREATE LOGIN <login_alias> WITH PASSWORD = 'enter_your_password';\nCREATE USER <user_alias> FROM LOGIN <login_alias>\n\n--2.a Create USER for the Azure AD account\n\nuse yourdb -- Use your DB name\nCREATE USER <user_alias> FROM LOGIN [alias@domain.com]\n\n--2.b Create USER for the SQL Auth account\nuse yourdb -- Use your DB name\nCREATE USER <user_alias> FROM LOGIN <login_alias>\n\n--3.Add USER to members of the specified role\n\nuse yourdb -- Use your DB name\ngo\nalter role db_owner Add MEMBER <user_alias> -- Type user alias from step 2\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

@@ -1,0 +1,147 @@
+{
+	"name": "confluent_synapse_scala",
+	"properties": {
+		"folder": {
+			"name": "Streaming"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "confluent1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 1,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "1",
+				"spark.dynamicAllocation.maxExecutors": "1"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_spark",
+				"display_name": "Synapse Spark"
+			},
+			"language_info": {
+				"name": "scala"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/confluent1",
+				"name": "confluent1",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/confluent1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"// ##Define Variables\r\n",
+					"\r\n",
+					"// val confluentBootstrapServers = \"pkc-57jzz.southcentralus.azure.confluent.cloud:9092\"\r\n",
+					"\r\n",
+					"// val confluentApiKey = \"57SIALDON7M7P3BM\"\r\n",
+					"\r\n",
+					"// val confluentSecret = \"meYS4nx3FtyZ2MHEb8vYE0QQxIjinhcROx+k7hBA38fEgwmTMqz3LtgeXenMtkTD\"\r\n",
+					"\r\n",
+					"// val confluentRegistryApiKey = \"K7ATMG3SO7XDORJB\"\r\n",
+					"\r\n",
+					"// val confluentRegistrySecret = \"mp/hWGvfrFI4lY1rKLzqqnbrbL1pIbf7sEbahShc8rQnV0qzaKY3NsIBb9NXu5SO\"\r\n",
+					"\r\n",
+					"// val confluentTopicName = \"product\"\r\n",
+					"\r\n",
+					"// val schemaRegistryUrl = \"https://psrc-pg3n2.westus2.azure.confluent.cloud\"\r\n",
+					"\r\n",
+					"val confluentBootstrapServers = \"pkc-41973.westus2.azure.confluent.cloud:9092\"\r\n",
+					"\r\n",
+					"val confluentApiKey = \"HBZAZ3BKC57KW5XI\"\r\n",
+					"\r\n",
+					"val confluentSecret = \"tvEWW4vI+X1M81Y0BU7knPqlgllBthCs+sU7Zsiv27CyJlII2qRTF208kVkf0q4/\"\r\n",
+					"\r\n",
+					"// val confluentRegistryApiKey = \"K7ATMG3SO7XDORJB\"\r\n",
+					"\r\n",
+					"// val confluentRegistrySecret = \"mp/hWGvfrFI4lY1rKLzqqnbrbL1pIbf7sEbahShc8rQnV0qzaKY3NsIBb9NXu5SO\"\r\n",
+					"\r\n",
+					"// val confluentTopicName = \"product\"\r\n",
+					"\r\n",
+					"// val schemaRegistryUrl = \"https://psrc-pg3n2.westus2.azure.confluent.cloud\"\r\n",
+					"\r\n",
+					"// ##Define Schema Registry\r\n",
+					"\r\n",
+					"// from confluent_kafka.schema_registry import SchemaRegistryClient\r\n",
+					"\r\n",
+					"// schema_registry_conf = {\r\n",
+					"\r\n",
+					"//     'url': schemaRegistryUrl,\r\n",
+					"\r\n",
+					"//     'basic.auth.user.info': '{}:{}'.format(confluentRegistryApiKey, confluentRegistrySecret)}\r\n",
+					"\r\n",
+					"// schema_registry_client = SchemaRegistryClient(schema_registry_conf)\r\n",
+					"\r\n",
+					" \r\n",
+					"\r\n",
+					"// ##Import Library\r\n",
+					"\r\n",
+					"import spark.sql.functions\r\n",
+					"\r\n",
+					"import spark.sql.avro.functions.from_avro\r\n",
+					"\r\n",
+					"import spark.sql.types.StringType\r\n",
+					"\r\n",
+					"// binary_to_string = fn.udf(lambda x: str(int.from_bytes(x, byteorder='big')), StringType())\r\n",
+					"\r\n",
+					" \r\n",
+					"\r\n",
+					"// ##Create Spark Readstream\r\n",
+					"\r\n",
+					"// val clickstreamTestDf =spark.readStream.format(\"kafka\")\r\n",
+					"\r\n",
+					"val clickstreamTestDf = (\r\n",
+					"  spark\r\n",
+					"  .readStream\r\n",
+					"  .format(\"kafka\")\r\n",
+					"  .option(\"kafka.bootstrap.servers\", confluentBootstrapServers)\r\n",
+					"  .option(\"kafka.security.protocol\", \"SASL_SSL\")\r\n",
+					"  .option(\"kafka.sasl.jaas.config\", \"org.apache.kafka.common.security.plain.PlainLoginModule required username='{}' password='{}';\".format(confluentApiKey, confluentSecret))\r\n",
+					"  .option(\"kafka.ssl.endpoint.identification.algorithm\", \"https\")\r\n",
+					"  .option(\"kafka.sasl.mechanism\", \"PLAIN\")\r\n",
+					"  .option(\"subscribe\", confluentTopicName)\r\n",
+					"  .option(\"startingOffsets\", \"earliest\")\r\n",
+					"  .option(\"failOnDataLoss\", \"false\")\r\n",
+					"  .load()\r\n",
+					"  .select(\"topic\", \"partition\", \"offset\", \"timestamp\", \"timestampType\")\r\n",
+					")\r\n",
+					"\r\n",
+					"// #Data within the Spark stream can be displayed dynamically from within the notebook.\r\n",
+					"\r\n",
+					"// ##Display \r\n",
+					"\r\n",
+					"// # display(clickstreamTestDf)"
+				],
+				"execution_count": 1
+			}
+		]
+	}
+}

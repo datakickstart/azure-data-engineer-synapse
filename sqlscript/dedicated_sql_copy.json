@@ -1,0 +1,17 @@
+{
+	"name": "dedicated_sql_copy",
+	"properties": {
+		"content": {
+			"query": "ALTER DATABASE sql01\nSET AUTO_CREATE_STATISTICS ON;\n\nCREATE TABLE yellow_trips (\n\t[vendorID] nvarchar(40),\n\t[tpepPickupDateTime] datetime2(7),\n\t[tpepDropoffDateTime] datetime2(7),\n\t[passengerCount] int,\n\t[tripDistance] float,\n\t[puLocationId] nvarchar(40),\n\t[doLocationId] nvarchar(40),\n\t[startLon] float,\n\t[startLat] float,\n\t[endLon] float,\n\t[endLat] float,\n\t[rateCodeId] int,\n\t[storeAndFwdFlag] nvarchar(40),\n\t[paymentType] nvarchar(400),\n\t[fareAmount] float,\n\t[extra] float,\n\t[mtaTax] float,\n\t[improvementSurcharge] nvarchar(400),\n\t[tipAmount] float,\n\t[tollsAmount] float,\n\t[totalAmount] float,\n\t[pickupDt] date,\n\t[dropoffDt] date,\n\t[tipPct] float,\n\t[Borough] nvarchar(400),\n\t[PickupZone] nvarchar(400),\n\t[PickupServiceZone] nvarchar(400)\n\t)\nWITH (\n    CLUSTERED COLUMNSTORE INDEX,\n    DISTRIBUTION = HASH (pickupDt)\n) \n\nCOPY INTO yellow_trips FROM 'https://datakickstartadls.dfs.core.windows.net/demo/nyctaxi/tripdata/yellow_parquet/yearMonth=2018_02/*.parquet' WITH (FILE_TYPE = 'PARQUET') -- , AUTO_CREATE_TABLE = 'ON'\n\n\n\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "sql01",
+				"poolName": "sql01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

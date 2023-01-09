@@ -1,0 +1,22 @@
+{
+	"name": "sparkLogging_default",
+	"properties": {
+		"configs": {
+			"spark.synapse.logAnalytics.enabled": "true",
+			"spark.synapse.logAnalytics.workspaceId": "041a7d31-3f9e-4b27-989c-114d98731f26",
+			"spark.synapse.logAnalytics.keyVault.name": "dvtrainingkv",
+			"spark.synapse.logAnalytics.keyVault.linkedServiceName": "demokv",
+			"spark.synapse.logAnalytics.keyVault.key.secret": "log-synapse-workspace-key"
+		},
+		"created": "2022-12-06T09:00:21.2180000-08:00",
+		"createdBy": "training@dustinvannoy.com",
+		"annotations": [],
+		"configMergeRule": {
+			"artifact.currentOperation.spark.synapse.logAnalytics.enabled": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.workspaceId": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.name": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.linkedServiceName": "replace",
+			"artifact.currentOperation.spark.synapse.logAnalytics.keyVault.key.secret": "replace"
+		}
+	}
+}

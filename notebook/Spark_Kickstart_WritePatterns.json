@@ -1,0 +1,279 @@
+{
+	"name": "Spark_Kickstart_WritePatterns",
+	"properties": {
+		"folder": {
+			"name": "Spark Kickstart"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "cf21ba94-2f12-46ce-a561-fec48950d266"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"sample_column_names = [\"ItemName\", \"Value\"]\r\n",
+					"sample_data = [[\"Item1\", 1.0], [\"Item2\", 2.0], [\"Item3\", 3.0], [\"Item4\", 4.0]]\r\n",
+					"\r\n",
+					"df = spark.createDataFrame(sample_data, sample_column_names)"
+				],
+				"execution_count": 7
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Write to ADLS\r\n",
+					"In Databricks it is easiest to mount the ADLS location. You can write to local filesystem or specially mounted folders depending on the environment you are in. Many different protocols that may require their own Spark extensions to be installed.\r\n",
+					"\r\n",
+					"Common protocols:\r\n",
+					"\r\n",
+					"file:// Local filesystem\r\n",
+					"hdfs:// Hadoop filesystem\r\n",
+					"abfss:// Azure Data Lake Storage (Gen2)\r\n",
+					"wasbs:// Azure Blob Storage\r\n",
+					"s3:// AWS S3 (several variations of this)\r\n",
+					"gs:// Google Cloud Storage"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# CSV\r\n",
+					"csv_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/write_examples/items_csv\"\r\n",
+					"(\r\n",
+					"  df.write\r\n",
+					"    .mode(\"overwrite\")\r\n",
+					"    .option(\"header\",\"true\")\r\n",
+					"    .csv(csv_path) \r\n",
+					" )"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Parquet\r\n",
+					"parquet_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/write_examples/items_parquet\"\r\n",
+					"\r\n",
+					"(\r\n",
+					"  df.write\r\n",
+					"    .mode(\"overwrite\")\r\n",
+					"    .parquet(parquet_path)\r\n",
+					")"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# Delta\r\n",
+					"delta_path = \"abfss://demo@datakickstartadls.dfs.core.windows.net/write_examples/items_delta\"\r\n",
+					"\r\n",
+					"(\r\n",
+					"  df.write\r\n",
+					"    .format(\"delta\")\r\n",
+					"    .save(delta_path)\r\n",
+					")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Write to JDBC"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"database = \"StackOverflow2010\"\r\n",
+					"db_host_name = \"sandbox-2-sqlserver.database.windows.net\"\r\n",
+					"db_url = f\"jdbc:sqlserver://{db_host_name};databaseName={database}\"\r\n",
+					"db_user = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"sql-user-stackoverflow\")\r\n",
+					"db_password = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"sql-pwd-stackoverflow\")\r\n",
+					"\r\n",
+					"table = \"items_test\"\r\n",
+					"\r\n",
+					"(\r\n",
+					"  df.write\r\n",
+					"    .mode(\"overwrite\")\r\n",
+					"    .format(\"jdbc\")\r\n",
+					"    .option(\"url\", db_url)\r\n",
+					"    .option(\"dbtable\", table)\r\n",
+					"    .option(\"user\", db_user)\r\n",
+					"    .option(\"password\", db_password)\r\n",
+					"    .save()\r\n",
+					")"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"### Write to SQL Server (special driver)"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"database = \"StackOverflow2010\"\r\n",
+					"db_host_name = \"sandbox-2-sqlserver.database.windows.net\"\r\n",
+					"db_url = f\"jdbc:sqlserver://{db_host_name};databaseName={database}\"\r\n",
+					"db_user = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"sql-user-stackoverflow\")\r\n",
+					"db_password = mssparkutils.credentials.getSecretWithLS(\"demokv\", \"sql-pwd-stackoverflow\")\r\n",
+					"\r\n",
+					"table = \"items_test2\"\r\n",
+					"\r\n",
+					"(\r\n",
+					"    df.write\r\n",
+					"    .mode(\"overwrite\")\r\n",
+					"    .format(\"com.microsoft.sqlserver.jdbc.spark\")\r\n",
+					"    .option(\"url\", db_url)\r\n",
+					"    .option(\"dbtable\", table)\r\n",
+					"    .option(\"user\", db_user)\r\n",
+					"    .option(\"password\", db_password)\r\n",
+					"    .save()\r\n",
+					")"
+				],
+				"execution_count": 8
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

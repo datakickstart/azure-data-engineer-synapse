@@ -1,0 +1,110 @@
+{
+	"name": "python_beautifulsoup",
+	"properties": {
+		"folder": {
+			"name": "Demo Miscellaneous"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "pythondefault",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "e943ec1b-0e32-4486-a4c8-022411ea4f0e"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/pythondefault",
+				"name": "pythondefault",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/pythondefault",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.1",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"import requests\r\n",
+					"import pandas as pd\r\n",
+					"import openpyxl\r\n",
+					"import json\r\n",
+					"\r\n",
+					"import requests\r\n",
+					"# import pytest\r\n",
+					"from bs4 import BeautifulSoup"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"# https://realpython.com/beautiful-soup-web-scraper-python/\r\n",
+					"\r\n",
+					"URL = \"https://realpython.github.io/fake-jobs/\"\r\n",
+					"page = requests.get(URL)\r\n",
+					"\r\n",
+					"soup = BeautifulSoup(page.content, \"html.parser\")\r\n",
+					"results = soup.find(id=\"ResultsContainer\")\r\n",
+					"# print(results.prettify())\r\n",
+					"job_elements = results.find_all(\"div\", class_=\"card-content\")\r\n",
+					"\r\n",
+					"for job_element in job_elements:\r\n",
+					"    title_element = job_element.find(\"h2\", class_=\"title\")\r\n",
+					"    company_element = job_element.find(\"h3\", class_=\"company\")\r\n",
+					"    location_element = job_element.find(\"p\", class_=\"location\")\r\n",
+					"    print(title_element.text.strip())\r\n",
+					"    print(company_element.text.strip())\r\n",
+					"    print(location_element.text.strip())\r\n",
+					"    print()"
+				],
+				"execution_count": 4
+			}
+		]
+	}
+}

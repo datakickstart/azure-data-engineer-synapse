@@ -1,0 +1,300 @@
+{
+	"name": "stackoverflow_streaming",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark32",
+			"type": "BigDataPoolReference"
+		},
+		"targetSparkConfiguration": {
+			"referenceName": "sparkConfigurationSmall",
+			"type": "SparkConfigurationReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "6ec1a5a8-87eb-46b5-923f-7b7e9a2e2ef8"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/spark32",
+				"name": "spark32",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark32",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 10,
+			"targetSparkConfiguration": "sparkConfigurationSmall"
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"from pyspark.sql.functions import *\r\n",
+					"from pyspark.sql.types import StructType, StringType\r\n",
+					"\r\n",
+					"GROUP_ID = \"so_v2\"\r\n",
+					"\r\n",
+					"source_base_path = \"abfss://demo@dvtrainingadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"raw_base_path = \"abfss://raw@datakickstartadls.dfs.core.windows.net/stackoverflow/\"\r\n",
+					"refined_base_path = \"abfss://refined@datakickstartadls.dfs.core.windows.net/\"\r\n",
+					"\r\n",
+					"ckpt_path = f\"{raw_base_path}checkpoints/stackoverflow_streaming_{GROUP_ID}\"\r\n",
+					"dest_path = f\"{raw_base_path}stack_overflow_streaming/posts_{GROUP_ID}\""
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"%run utils/logging_utils"
+				],
+				"execution_count": 2
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"job_name = \"stackoverflow_stream\"\r\n",
+					"destination_database_name = \"raw\"\r\n",
+					"destination_table_name = \"stackoverflow_streaming\"\r\n",
+					"source_table_name = \"stackoverflow_kafka_stream\"\r\n",
+					"start_logging(job_name, destination_database_name, destination_table_name, source_table_name)"
+				],
+				"execution_count": 3
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"post_schema = (\r\n",
+					"  StructType()\r\n",
+					"    .add('_Id','long')\r\n",
+					"    .add('_ParentId','long')\r\n",
+					"    .add('_PostTypeId','long')\r\n",
+					"    .add('_Score','long')\r\n",
+					"    .add('_Tags','string')\r\n",
+					"    .add('_Title','string')\r\n",
+					"    .add('_ViewCount','long')  \r\n",
+					"    .add('_LastActivityDate','timestamp')\r\n",
+					"    .add('_LastEditDate','timestamp')\r\n",
+					"    .add('_LastEditorDisplayName','string')\r\n",
+					"    .add('_LastEditorUserId','long')\r\n",
+					"    .add('_OwnerDisplayName','string')\r\n",
+					"    .add('_OwnerUserId','long')\r\n",
+					"    .add('_AcceptedAnswerId','long')\r\n",
+					"    .add('_AnswerCount','long')\r\n",
+					"    .add('_Body','string')\r\n",
+					"    .add('_ClosedDate','timestamp')\r\n",
+					"    .add('_CommentCount','long')\r\n",
+					"    .add('_CommunityOwnedDate','timestamp')\r\n",
+					"    .add('_ContentLicense','string')\r\n",
+					"    .add('_CreationDate','timestamp')\r\n",
+					"    .add('_FavoriteCount','long')\r\n",
+					")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"##Define Variables\r\n",
+					"confluentBootstrapServers = \"pkc-41973.westus2.azure.confluent.cloud:9092\"\r\n",
+					"confluentApiKey =  mssparkutils.credentials.getSecretWithLS('demokv', 'confluent-cloud-user')\r\n",
+					"confluentSecret = mssparkutils.credentials.getSecretWithLS('demokv', 'confluent-cloud-password')\r\n",
+					"confluentTopicName = \"stackoverflow_post\"\r\n",
+					"\r\n",
+					"##Create Spark Readstream\r\n",
+					"post_raw_df = (\r\n",
+					"  spark\r\n",
+					"  .readStream\r\n",
+					"  .format(\"kafka\")\r\n",
+					"  .option(\"kafka.bootstrap.servers\", confluentBootstrapServers)\r\n",
+					"  .option(\"kafka.security.protocol\", \"SASL_SSL\")\r\n",
+					"  .option(\"kafka.sasl.jaas.config\", \"org.apache.kafka.common.security.plain.PlainLoginModule required username='{}' password='{}';\".format(confluentApiKey, confluentSecret))\r\n",
+					"  .option(\"kafka.sasl.mechanism\", \"PLAIN\")\r\n",
+					"  .option(\"subscribe\", confluentTopicName)\r\n",
+					"  .option(\"startingOffsets\", \"earliest\")\r\n",
+					"  .option(\"failOnDataLoss\", \"false\")\r\n",
+					"  .load()\r\n",
+					")\r\n",
+					"\r\n",
+					"post_cast_df = post_raw_df.select(\r\n",
+					"    col('key').cast('string').alias('key'),\r\n",
+					"    from_json(col('value').cast('string'), post_schema).alias(\"json\"))\r\n",
+					"\r\n",
+					"post_df = post_cast_df.selectExpr(\"json.*\")"
+				],
+				"execution_count": 5
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"new_users = spark.read.format(\"delta\").load(f\"{refined_base_path}stackoverflow_new_users\").select(\r\n",
+					"    \"user_id\",\r\n",
+					"    \"account_id\",\r\n",
+					"    \"display_name\",\r\n",
+					"    \"website_url\"\r\n",
+					")\r\n",
+					"\r\n",
+					"old_users = spark.read.parquet(f\"{raw_base_path}users\").selectExpr(\r\n",
+					"    \"_ID as user_id\",\r\n",
+					"    \"_AccountId as account_id\",\r\n",
+					"    \"_DisplayName as display_name\",\r\n",
+					"    \"_WebsiteUrl as website_url\"\r\n",
+					"    )\r\n",
+					"\r\n",
+					"all_users = old_users.union(new_users)"
+				],
+				"execution_count": 6
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"combined_df = post_df.join(all_users, post_df[\"_OwnerUserId\"] == all_users[\"user_id\"], how=\"left\")\r\n",
+					"log_informational_message(\"Starting stream for combined so posts to delta file.\")\r\n",
+					"\r\n",
+					"q = combined_df.writeStream.format(\"delta\").option(\"checkpointLocation\",ckpt_path) \\\r\n",
+					"    .trigger(processingTime='30 seconds').outputMode(\"append\") \\\r\n",
+					"    .start(dest_path)\r\n",
+					"\r\n",
+					"q.processAllAvailable()\r\n",
+					"q.stop()"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"test_df = spark.read.format(\"delta\").load(dest_path)\r\n",
+					"display(test_df)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"stop_logging(job_name)"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}

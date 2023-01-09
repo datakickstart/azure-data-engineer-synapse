@@ -1,0 +1,108 @@
+{
+	"name": "stackoverflow_analysis",
+	"properties": {
+		"folder": {
+			"name": "stackoverflow"
+		},
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "sparkLogging",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "924fda26-32ea-46a2-bbf8-1731e01207e7"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"enableDebugMode": false,
+			"kernelspec": {
+				"name": "synapse_pyspark",
+				"display_name": "Synapse PySpark"
+			},
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/b99affbe-2256-409d-a682-c20a3963070b/resourceGroups/datakickstart-synapse-rg/providers/Microsoft.Synapse/workspaces/datakickstart-synapse/bigDataPools/sparkLogging",
+				"name": "sparkLogging",
+				"type": "Spark",
+				"endpoint": "https://datakickstart-synapse.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/sparkLogging",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net"
+				},
+				"sparkVersion": "3.2",
+				"nodeCount": 3,
+				"cores": 4,
+				"memory": 28,
+				"automaticScaleJobs": false
+			},
+			"sessionKeepAliveTimeout": 10
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"microsoft": {
+						"language": "sparksql"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%sql\r\n",
+					"WITH post_comments (\r\n",
+					"  Select \r\n",
+					"    _PostId,\r\n",
+					"    count(1) CommentsCount,\r\n",
+					"    avg(_Score) AvgCommentScore\r\n",
+					"  From raw_stackoverflow.comments\r\n",
+					"  group by _PostId\r\n",
+					")\r\n",
+					"Select\r\n",
+					"    posts._PostTypeId\r\n",
+					"    ,users._Reputation\r\n",
+					"    ,min(posts._CreationDate) FirstCreationDate\r\n",
+					"    ,max(_LastActivityDate) LastActivityDate\r\n",
+					"    ,max(_ClosedDate) LastClosedDate\r\n",
+					"    ,count(_ClosedDate) ClosedCount\r\n",
+					"    ,sum(_FavoriteCount) FavoriteCount\r\n",
+					"    ,sum(_CommentCount) CommentCount\r\n",
+					"    ,sum(_AnswerCount) AnswerCount\r\n",
+					"    ,sum(_Score) ScoreTotal\r\n",
+					"    ,sum(_ViewCount) ViewCount\r\n",
+					"    ,count(1) Posts\r\n",
+					"    ,sum(CommentsCount) CommentsCount\r\n",
+					"    ,max(AvgCommentScore) AvgCommentScore\r\n",
+					"FROM raw_stackoverflow.posts\r\n",
+					"  JOIN raw_stackoverflow.users\r\n",
+					"    ON posts._OwnerUserId = users._Id\r\n",
+					"  JOIN post_comments\r\n",
+					"    ON posts._Id = post_comments._PostId\r\n",
+					"GROUP BY _PostTypeId, users._Reputation"
+				],
+				"execution_count": null
+			}
+		]
+	}
+}

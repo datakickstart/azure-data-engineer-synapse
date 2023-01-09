@@ -1,0 +1,6 @@
+{
+	"name": "DatacenterIntegrationRuntime1",
+	"properties": {
+		"type": "SelfHosted"
+	}
+}
