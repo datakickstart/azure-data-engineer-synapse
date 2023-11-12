@@ -12,7 +12,15 @@
 					"name": "AzureSQLVideos"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "datakickstartadls_ls",
+						"type": "LinkedServiceReference"
+					},
+					"name": "VideoViewCDCsink"
+				}
+			],
 			"transformations": [],
 			"scriptLines": [
 				"source(output(",
@@ -31,7 +39,25 @@
 				"     netChanges: true,",
 				"     skipInitialLoad: true,",
 				"     isolationLevel: 'READ_UNCOMMITTED',",
-				"     format: 'table') ~> AzureSQLVideos"
+				"     format: 'table') ~> AzureSQLVideos",
+				"AzureSQLVideos sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'delta',",
+				"     fileSystem: 'raw',",
+				"     folderPath: 'video_view_cdc',",
+				"     mergeSchema: false,",
+				"     autoCompact: false,",
+				"     optimizedWrite: false,",
+				"     vacuum: 0,",
+				"     deletable: false,",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     upsertable: false,",
+				"     umask: 0666,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> VideoViewCDCsink"
 			]
 		}
 	}
