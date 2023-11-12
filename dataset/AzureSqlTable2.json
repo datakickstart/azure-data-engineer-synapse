@@ -1,0 +1,56 @@
+{
+	"name": "AzureSqlTable2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "key",
+				"type": "nvarchar"
+			},
+			{
+				"name": "offset",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "timestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "usageId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "user",
+				"type": "nvarchar"
+			},
+			{
+				"name": "completed",
+				"type": "bit"
+			},
+			{
+				"name": "durationSeconds",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "eventTimestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "video_view"
+		}
+	}
+}
