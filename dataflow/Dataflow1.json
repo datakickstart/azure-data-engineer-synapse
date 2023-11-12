@@ -45,7 +45,7 @@
 				"     validateSchema: false,",
 				"     format: 'delta',",
 				"     fileSystem: 'sources',",
-				"     folderPath: 'video_usage',",
+				"     folderPath: 'video_usage/video_view_cdc',",
 				"     mergeSchema: false,",
 				"     autoCompact: false,",
 				"     optimizedWrite: false,",
