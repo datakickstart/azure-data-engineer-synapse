@@ -13578,12 +13578,24 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VideoViewCDC_JSON",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"AzureSQLVideos": {},
+									"VideoViewCDCsink": {}
+								}
+							},
 							"staging": {},
 							"compute": {
 								"coreCount": 8,
 								"computeType": "General"
 							},
-							"traceLevel": "Coarse"
+							"traceLevel": "Coarse",
+							"continuationSettings": {
+								"customizedCheckpointKey": "json-f62aca24-60ff-4074-b505-5f0d969e7c61"
+							}
 						}
 					},
 					{
@@ -13600,7 +13612,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "MemberCDC_Delta",
+								"referenceName": "MemberCDC_JSON",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
@@ -13623,12 +13635,13 @@
 				"annotations": []
 			},
 			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/VideoViewCDC_JSON')]",
 				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
-				"[concat(variables('workspaceId'), '/dataflows/MemberCDC_Delta')]"
+				"[concat(variables('workspaceId'), '/dataflows/MemberCDC_JSON')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/VideoViewCDC_Delta_copy1')]",
+			"name": "[concat(parameters('workspaceName'), '/VideoViewCDC_JSON')]",
 			"type": "Microsoft.Synapse/workspaces/dataflows",
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
@@ -13674,17 +13687,9 @@
 						"     format: 'table') ~> AzureSQLVideos",
 						"AzureSQLVideos sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     format: 'delta',",
+						"     format: 'json',",
 						"     fileSystem: 'sources',",
-						"     folderPath: 'video_usage/video_view_cdc',",
-						"     mergeSchema: false,",
-						"     autoCompact: false,",
-						"     optimizedWrite: false,",
-						"     vacuum: 0,",
-						"     deletable: false,",
-						"     insertable: true,",
-						"     updateable: false,",
-						"     upsertable: false,",
+						"     folderPath: 'video_usage/video_view_json_cdc',",
 						"     umask: 0666,",
 						"     preCommands: [],",
 						"     postCommands: [],",
@@ -13696,6 +13701,274 @@
 			"dependsOn": [
 				"[concat(variables('workspaceId'), '/datasets/AzureSqlTable2')]",
 				"[concat(variables('workspaceId'), '/linkedServices/datakickstartadls2_ls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/MemberCDC_JSON')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable3",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "datakickstartadls2_ls",
+								"type": "LinkedServiceReference"
+							},
+							"name": "membercdcsink"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          key as string,",
+						"          offset as long,",
+						"          timestamp as timestamp,",
+						"          membershipId as integer,",
+						"          user as string,",
+						"          planId as string,",
+						"          startDate as string,",
+						"          endDate as string,",
+						"          updatedAt as string,",
+						"          eventTimestamp as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'json',",
+						"     fileSystem: 'sources',",
+						"     folderPath: 'video_usage/member_json_cdc',",
+						"     umask: 0666,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> membercdcsink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/AzureSqlTable3')]",
+				"[concat(variables('workspaceId'), '/linkedServices/datakickstartadls2_ls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/VideoViewCDC_Parquet')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable2",
+								"type": "DatasetReference"
+							},
+							"name": "AzureSQLVideos"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "datakickstartadls2_ls",
+								"type": "LinkedServiceReference"
+							},
+							"name": "VideoViewCDCsink"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          key as string,",
+						"          offset as long,",
+						"          timestamp as timestamp,",
+						"          usageId as integer,",
+						"          user as string,",
+						"          completed as boolean,",
+						"          durationSeconds as integer,",
+						"          eventTimestamp as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     enableCdc: true,",
+						"     mode: 'read',",
+						"     skipInitialLoad: false,",
+						"     waterMarkColumn: 'offset',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> AzureSQLVideos",
+						"AzureSQLVideos sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'sources',",
+						"     folderPath: 'video_usage/video_view_parquet_cdc',",
+						"     compressionCodec: 'snappy',",
+						"     umask: 0666,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> VideoViewCDCsink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/AzureSqlTable2')]",
+				"[concat(variables('workspaceId'), '/linkedServices/datakickstartadls2_ls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/MemberCDC_Parquet')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable3",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "datakickstartadls2_ls",
+								"type": "LinkedServiceReference"
+							},
+							"name": "membercdcsink"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          key as string,",
+						"          offset as long,",
+						"          timestamp as timestamp,",
+						"          membershipId as integer,",
+						"          user as string,",
+						"          planId as string,",
+						"          startDate as string,",
+						"          endDate as string,",
+						"          updatedAt as string,",
+						"          eventTimestamp as timestamp",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> source1",
+						"source1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     fileSystem: 'sources',",
+						"     folderPath: 'video_usage/member_parquet_cdc',",
+						"     compressionCodec: 'snappy',",
+						"     umask: 0666,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> membercdcsink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/AzureSqlTable3')]",
+				"[concat(variables('workspaceId'), '/linkedServices/datakickstartadls2_ls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureSQL_VideoView_CDC_Parquet_Pipeline')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "AzureSQL_VideoView_Parquet_CDC",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.2:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "VideoViewCDC_Parquet",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"AzureSQLVideos": {},
+									"VideoViewCDCsink": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Coarse",
+							"continuationSettings": {
+								"customizedCheckpointKey": "pqt-6055e0f8-b5c5-4f14-81bd-c133f3f686dd"
+							}
+						}
+					},
+					{
+						"name": "AzureSQL_Member_Parquet_CDC",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.2:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "MemberCDC_Parquet",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"membercdcsink": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Coarse"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/VideoViewCDC_Parquet')]",
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('workspaceId'), '/dataflows/MemberCDC_Parquet')]"
 			]
 		}
 	]
