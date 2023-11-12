@@ -1,0 +1,55 @@
+{
+	"name": "MemberCDC_JSON",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "AzureSqlTable3",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "datakickstartadls2_ls",
+						"type": "LinkedServiceReference"
+					},
+					"name": "membercdcsink"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          key as string,",
+				"          offset as long,",
+				"          timestamp as timestamp,",
+				"          membershipId as integer,",
+				"          user as string,",
+				"          planId as string,",
+				"          startDate as string,",
+				"          endDate as string,",
+				"          updatedAt as string,",
+				"          eventTimestamp as timestamp",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> source1",
+				"source1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'json',",
+				"     fileSystem: 'sources',",
+				"     folderPath: 'video_usage/member_json_cdc',",
+				"     umask: 0666,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> membercdcsink"
+			]
+		}
+	}
+}
