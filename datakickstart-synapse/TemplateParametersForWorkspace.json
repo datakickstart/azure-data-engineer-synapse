@@ -44,6 +44,9 @@
 		"datakickstart-synapse-WorkspaceDefaultStorage_properties_typeProperties_url": {
 			"value": "https://datakickstartadls.dfs.core.windows.net"
 		},
+		"datakickstartadls2_ls_properties_typeProperties_url": {
+			"value": "https://datakickstartadls2.dfs.core.windows.net/"
+		},
 		"datakickstartadls_ls_properties_typeProperties_url": {
 			"value": "https://datakickstartadls.dfs.core.windows.net"
 		},
