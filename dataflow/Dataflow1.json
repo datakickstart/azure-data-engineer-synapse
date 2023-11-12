@@ -15,7 +15,7 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "datakickstartadls_ls",
+						"referenceName": "datakickstartadls2_ls",
 						"type": "LinkedServiceReference"
 					},
 					"name": "VideoViewCDCsink"
@@ -44,8 +44,8 @@
 				"AzureSQLVideos sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delta',",
-				"     fileSystem: 'raw',",
-				"     folderPath: 'video_view_cdc',",
+				"     fileSystem: 'sources',",
+				"     folderPath: 'video_usage/video_view_cdc',",
 				"     mergeSchema: false,",
 				"     autoCompact: false,",
 				"     optimizedWrite: false,",
