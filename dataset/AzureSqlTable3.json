@@ -1,0 +1,63 @@
+{
+	"name": "AzureSqlTable3",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandboxsqlserverless",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "key",
+				"type": "nvarchar"
+			},
+			{
+				"name": "offset",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "timestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "membershipId",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "user",
+				"type": "nvarchar"
+			},
+			{
+				"name": "planId",
+				"type": "nvarchar"
+			},
+			{
+				"name": "startDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "endDate",
+				"type": "nvarchar"
+			},
+			{
+				"name": "updatedAt",
+				"type": "nvarchar"
+			},
+			{
+				"name": "eventTimestamp",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "member"
+		}
+	}
+}
