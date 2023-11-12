@@ -28,6 +28,30 @@
 						"customizedCheckpointKey": "4c9a1b6e-a137-4ae1-95ff-436f555aa8f0"
 					}
 				}
+			},
+			{
+				"name": "AzureSQL_Member_CDC",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.2:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "Dataflow2",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Coarse"
+				}
 			}
 		],
 		"annotations": []
