@@ -1,9 +1,9 @@
 {
-	"name": "AzureSQL_VideoView_CDC_JSON_Pipeline",
+	"name": "AzureSQL_VideoView_CDC_Parquet_Pipeline",
 	"properties": {
 		"activities": [
 			{
-				"name": "AzureSQL_VideoView_JSON_CDC",
+				"name": "AzureSQL_VideoView_Parquet_CDC",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "VideoViewCDC_JSON",
+						"referenceName": "VideoViewCDC_Parquet",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -25,12 +25,12 @@
 					},
 					"traceLevel": "Coarse",
 					"continuationSettings": {
-						"customizedCheckpointKey": "json-f62aca24-60ff-4074-b505-5f0d969e7c61"
+						"customizedCheckpointKey": "pqt-6055e0f8-b5c5-4f14-81bd-c133f3f686dd"
 					}
 				}
 			},
 			{
-				"name": "AzureSQL_Member_JSON_CDC",
+				"name": "AzureSQL_Member_Parquet_CDC",
 				"type": "ExecuteDataFlow",
 				"dependsOn": [],
 				"policy": {
@@ -43,7 +43,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "MemberCDC_JSON",
+						"referenceName": "MemberCDC_Parquet",
 						"type": "DataFlowReference"
 					},
 					"compute": {
