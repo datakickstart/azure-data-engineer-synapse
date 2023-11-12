@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Dataflow1",
+						"referenceName": "VideoViewCDC_Delta",
 						"type": "DataFlowReference"
 					},
 					"compute": {
@@ -43,7 +43,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Dataflow2",
+						"referenceName": "MemberCDC_Delta",
 						"type": "DataFlowReference"
 					},
 					"compute": {
